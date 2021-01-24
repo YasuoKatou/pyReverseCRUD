@@ -1,0 +1,2 @@
+# pyReverseCRUD
+JavaソースとMyBatisのMapperXMLからCRUDを作成する
