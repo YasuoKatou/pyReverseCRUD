@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mybatisdemo.mapper.SampleMapper">
+  <resultMap id="userResultMap" type="User">
+    <id property="id" column="user_id" />
+    <result property="username" column="username"/>
+    <result property="password" column="password"/>
+  </resultMap>
+
+  <select id="selectUsers" resultMap="userResultMap">
+    select user_id, user_name, hashed_password
+    --コメント
+    <include refid="someinclude"/>
+    where id = #{id}
+    <if test="title != null">
+      AND title like #{title}
+    </if>
+  </select>
+  <sql id="someinclude">
+    from some_table -- コメント
+  </sql>
+</mapper>
