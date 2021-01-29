@@ -62,13 +62,13 @@ class DaoReader():
                     ns = child.attrib['namespace']
                     r['mapper'] = self.getMapperInterface(ns)
                     rr[ns] = r
-                elif tagName in ('select', 'insert', 'update'):
+                elif tagName in ('select', 'insert', 'update', 'delete'):
                     dmlChildren.append(child)
                 elif tagName == 'sql':
                     sqlIncludes[child.attrib['id']] = "".join(child.itertext())
             for child in dmlChildren:
                 tagName = child.tag.lower()
-                if tagName in ('select', 'insert', 'update'):
+                if tagName in ('select', 'insert', 'update', 'delete'):
                   r['dml'][child.attrib['id']] = self.expandDml(tagName, child, sqlIncludes)
         return rr
 

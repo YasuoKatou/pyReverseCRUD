@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import re
 
-_RS01 = r".+\s+from\s+(?P<table_name>\w+).?"
+_RS01 = r".+(?<!delete)\s+from\s+(?P<table_name>\w+).?"
 _RS02 = r".+\s+join\s+(?P<join_name>\w+).?"
 
 _RI01 = r".?insert\s+into\s+(?P<table_name>\w+).?"
 
 _RU01 = r".?update\s+(?P<table_name>\w+).?"
 
-_RD01 = r".?delete\s+from\s+(?P<table_name>\w+).?"
+_RD01 = r".?(?<=delete)\s+from\s+(?P<table_name>\w+).?"
 
 def select_from_table(query):
 	'''

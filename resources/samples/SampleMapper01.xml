@@ -21,4 +21,21 @@
   <sql id="someinclude">
     from some_table -- コメント
   </sql>
+
+  <insert id="newdata">
+    insert into products (
+      id, name
+    ) values (
+      1, 'gun'
+    )
+  </insert>
+
+  <delete id="deleteByIdAndName">
+    DELETE FROM user WHERE id="1" AND name="ヤマダ";
+  </delete>
+  <update id="updateById">
+    UPDATE syain
+    SET name = '安田', romaji = 'yasuda'
+    WHERE id = 2;
+  </update>
 </mapper>
