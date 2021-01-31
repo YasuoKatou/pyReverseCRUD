@@ -3,7 +3,7 @@ import unittest
 import sys
 
 from daoReader import DaoReader as DR
-from curdJudgment import judgment
+from crudJudgment import judgment
 
 class TestCurdJudgment(unittest.TestCase):
 

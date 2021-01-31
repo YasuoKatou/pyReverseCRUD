@@ -1,0 +1,20 @@
+{
+    "Excel": {
+        "start_row": 5,
+        "start_column": 3,
+        "crud_width": 3,
+        "tables": {
+            "master": "マスタ系",
+            "transaction":"トラン系"}
+        },
+    "tables": {
+        "master": [
+            {"user": "ユーザマスタ"},
+            {"syain": "社員マスタ"}
+            ],
+        "transaction": [
+            {"products": "製品"},
+            {"some_table": "トランザクションテーブル"}
+            ]
+        }
+}
