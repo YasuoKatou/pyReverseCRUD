@@ -2,7 +2,7 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.mybatisdemo.mapper.SampleMapper">
+<mapper namespace="com.example.mybatisdemo.mapper.SampleMapper01">
   <resultMap id="userResultMap" type="User">
     <id property="id" column="user_id" />
     <result property="username" column="username"/>

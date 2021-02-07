@@ -85,5 +85,5 @@ if __name__ == '__main__':
         xmlRoot = myPath.parent
 
     reader = DaoReader()
-    reader.readXmls(xmlRoot = xmlRoot / 'resources')
+    reader.readXmls(xmlRoot = xmlRoot / 'resources' / 'sources')
 #[EOF]

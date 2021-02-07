@@ -105,7 +105,7 @@ if __name__ == '__main__':
 		xmlRoot = myPath.parent
 
 	reader = DR()
-	r = reader.readXmls(xmlRoot = xmlRoot / 'resources')
+	r = reader.readXmls(xmlRoot = xmlRoot / 'resources' / 'sources')
 
 	judgment(r)
 #[EOF]

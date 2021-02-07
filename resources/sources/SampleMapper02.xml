@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="yk.jp.example.mybatisdemo.mapper.SampleMapper02">
+  <select id="subQuery01">
+    select * from
+    (
+        select *
+        from TableA_1
+        left outer join (
+            select * from TableA_2
+        )
+        union all
+        select *
+        from TableB_1 TB1
+        inner join TableB_2 TB2
+           on TB2.id = TB1.id
+    )
+  </select>
+</mapper>

@@ -12,11 +12,11 @@ def getExcelBookPath():
 		return now.strftime("crud_%Y%m%d_%H%M%S.xlsx")
 	myPath = pathlib.Path(__file__)
 	xmlRoot = myPath.parent
-	return xmlRoot / getExcelBookName()
+	return xmlRoot / 'resources' / getExcelBookName()
 
 def getCrudConfig():
 	myPath = pathlib.Path(__file__)
-	json_path = myPath.parent / 'crudConfig.json'
+	json_path = myPath.parent / 'resources' / 'crudConfig.json'
 	with json_path.open(mode='r', encoding='UTF8') as f:
 		return json.load(f)
 
