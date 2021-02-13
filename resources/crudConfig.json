@@ -2,29 +2,41 @@
     "analize": {
         "jdk-path": "D:\\Oracle\\Java\\jdk-15.0.2\\bin",
         "javap-options": "-c -v",
-        "work-path": "C:\\Users\\YasuoKatou\\Documents\\GitHub\\pyReverseCRUD\\resources\\projects\\sample001",
+        "work-path": "C:\\Users\\YasuoKatou\\Documents\\GitHub\\pyReverseCRUD\\resources\\projects\\sample002",
         "Project": {
-            "path": "C:\\Users\\YasuoKatou\\workspace\\java\\sample001",
+            "path": "C:\\Users\\YasuoKatou\\workspace\\java\\sample002",
             "java-src": "\\src\\main\\java",
             "classes": "\\target\\classes"
-            }
         },
+        "spring": {
+            "controller": {
+                "RuntimeVisibleAnnotations:": ["org.springframework.stereotype.Controller"]
+            },
+            "service": {
+                "RuntimeVisibleAnnotations:": ["org.springframework.stereotype.Service"]
+            },
+            "component": {
+                "RuntimeVisibleAnnotations:": ["org.springframework.stereotype.Component"]
+            }
+        }
+    },
     "Excel": {
         "start_row": 5,
         "start_column": 3,
         "crud_width": 3,
         "tables": {
             "master": "マスタ系",
-            "transaction":"トラン系"}
-        },
+            "transaction":"トラン系"
+        }
+    },
     "tables": {
         "master": [
             {"user": "ユーザマスタ"},
             {"syain": "社員マスタ"}
-            ],
+        ],
         "transaction": [
             {"products": "製品"},
             {"some_table": "トランザクションテーブル"}
-            ]
-        }
+        ]
+    }
 }

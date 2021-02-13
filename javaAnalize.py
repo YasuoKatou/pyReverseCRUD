@@ -1,28 +1,33 @@
 # -*- coding: utf-8 -*-
 import json
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
 
 class JavaAnalize():
     def __init__(self):
+        self._debug = {'decompile':False}
         # 定義情報の読込み
         myPath = pathlib.Path(__file__)
         json_path = myPath.parent / 'resources' / 'crudConfig.json'
         with json_path.open(mode='r', encoding='UTF8') as f:
             config = json.load(f)
-        self._jdkPath = config['analize']['jdk-path']
-        self._javapOptions = config['analize']['javap-options']
-        self._workPath = config['analize']['work-path']
-        self._projectRoot = config['analize']['Project']['path']
-        self._javaSrc = self._projectRoot + config['analize']['Project']['java-src']
-        self._projectClasses = self._projectRoot + config['analize']['Project']['classes']
+        analize = config['analize']
+        self._jdkPath = analize['jdk-path']
+        self._javapOptions = analize['javap-options']
+        self._workPath = analize['work-path']
+        self._projectRoot = analize['Project']['path']
+        self._javaSrc = self._projectRoot + analize['Project']['java-src']
+        self._projectClasses = self._projectRoot + analize['Project']['classes']
+        self._spring = analize['spring']
         # ワークフォルダを初期化する
-        wp = pathlib.Path(self._workPath)
-        if wp.exists():
-            shutil.rmtree(str(wp))
-        wp.mkdir()
+        if self._debug['decompile']:
+            wp = pathlib.Path(self._workPath)
+            if wp.exists():
+                shutil.rmtree(str(wp))
+            wp.mkdir()
 
     def command(self, cmd):
         try:
@@ -52,12 +57,43 @@ class JavaAnalize():
                 for line in self.command(javap + ' ' + str(path)):
                     f.write(line + '\n')
 
+    def checkSpringType(self, keys, file):
+        r = ''
+        for k, v in keys.items():
+            r = r + k + r'.*'
+            if isinstance(v, list):
+                r += r'.*'.join(v)
+            else:
+                r += v
+        return re.search(r, file, flags=re.MULTILINE | re.DOTALL)
+
+    def getClass(self, file):
+        fqcn = None
+        key = r'public\s+class\s+(?P<fqcn>\S+)'
+        m = re.search(key, file)
+        if m:
+            fqcn = m.group('fqcn')
+
+        impl = None
+        key = r'public\s+class\s+\S+\s+implements\s+(?P<impl>\S+)'
+        m = re.search(key, file)
+        if m:
+            impl = m.group('impl')
+
+        return fqcn, impl
+
     def analize(self):
-        #print('java root : %s' % str(self._javaSrc))
-        #javaRoot = pathlib.Path(self._javaSrc)
-        #for path in list(javaRoot.glob('**/*.java')):
-        #    print('read : %s' % str(path))
-        self.decompile()
+        if self._debug['decompile']:
+            self.decompile()
+        classes = pathlib.Path(self._workPath)
+        # クラスの種別（コントローラ、サービス、コンポーネント）を判定
+        for path in list(classes.glob('**/*.class')):
+            with path.open(mode='r') as f:
+                buf = f.read()
+            for k, v in self._spring.items():
+                if self.checkSpringType(v, buf):
+                    cn, impl = self.getClass(buf)
+                    print('%s(%s) is %s' % (cn, impl, k))
 
 if __name__ == '__main__':
     ana = JavaAnalize()
