@@ -1,7 +1,10 @@
 {
     "analize": {
+        "debug": {
+            "decompile": false
+        },
         "jdk-path": "D:\\Oracle\\Java\\jdk-15.0.2\\bin",
-        "javap-options": "-c -v",
+        "javap-options": "-c -v -p -l",
         "work-path": "C:\\Users\\YasuoKatou\\Documents\\GitHub\\pyReverseCRUD\\resources\\projects\\sample002",
         "Project": {
             "path": "C:\\Users\\YasuoKatou\\workspace\\java\\sample002",
@@ -10,13 +13,40 @@
         },
         "spring": {
             "controller": {
-                "RuntimeVisibleAnnotations:": ["org.springframework.stereotype.Controller"]
+                "checkAnnotations": {
+                    "RuntimeVisibleAnnotations:": ["org.springframework.stereotype.Controller"]
+                },
+                "isController": true,
+                "isService": false,
+                "isComponent": false,
+                "isMapper": false
             },
             "service": {
-                "RuntimeVisibleAnnotations:": ["org.springframework.stereotype.Service"]
+                "checkAnnotations": {
+                    "RuntimeVisibleAnnotations:": ["org.springframework.stereotype.Service"]
+                },
+                "isController": false,
+                "isService": true,
+                "isComponent": false,
+                "isMapper": false
             },
             "component": {
-                "RuntimeVisibleAnnotations:": ["org.springframework.stereotype.Component"]
+                "checkAnnotations": {
+                    "RuntimeVisibleAnnotations:": ["org.springframework.stereotype.Component"]
+                },
+                "isController": false,
+                "isService": false,
+                "isComponent": true,
+                "isMapper": false
+            },
+            "mapper": {
+                "checkAnnotations": {
+                    "RuntimeVisibleAnnotations:": ["org.apache.ibatis.annotations.Mapper"]
+                },
+                "isController": false,
+                "isService": false,
+                "isComponent": false,
+                "isMapper": true
             }
         }
     },

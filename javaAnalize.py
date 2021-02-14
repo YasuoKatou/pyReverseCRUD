@@ -8,13 +8,13 @@ import sys
 
 class JavaAnalize():
     def __init__(self):
-        self._debug = {'decompile':False}
         # 定義情報の読込み
         myPath = pathlib.Path(__file__)
         json_path = myPath.parent / 'resources' / 'crudConfig.json'
         with json_path.open(mode='r', encoding='UTF8') as f:
             config = json.load(f)
         analize = config['analize']
+        self._debug = analize['debug']
         self._jdkPath = analize['jdk-path']
         self._javapOptions = analize['javap-options']
         self._workPath = analize['work-path']
@@ -22,6 +22,10 @@ class JavaAnalize():
         self._javaSrc = self._projectRoot + analize['Project']['java-src']
         self._projectClasses = self._projectRoot + analize['Project']['classes']
         self._spring = analize['spring']
+        self._springController = []
+        self._springService = []
+        self._springComponent = []
+        self._springMapper = []
         # ワークフォルダを初期化する
         if self._debug['decompile']:
             wp = pathlib.Path(self._workPath)
@@ -68,11 +72,19 @@ class JavaAnalize():
         return re.search(r, file, flags=re.MULTILINE | re.DOTALL)
 
     def getClass(self, file):
+        '''
+        クラス(インターフェース)ファイルのFQCNとimplementsを取得する
+        '''
         fqcn = None
         key = r'public\s+class\s+(?P<fqcn>\S+)'
         m = re.search(key, file)
         if m:
             fqcn = m.group('fqcn')
+        else:
+            key = r'public\s+interface\s+(?P<fqcn>\S+)'
+            m = re.search(key, file)
+            if m:
+                fqcn = m.group('fqcn')
 
         impl = None
         key = r'public\s+class\s+\S+\s+implements\s+(?P<impl>\S+)'
@@ -81,6 +93,19 @@ class JavaAnalize():
             impl = m.group('impl')
 
         return fqcn, impl
+
+    def findMethods(self, file):
+        r = r'\{(?P<code>.+)\}'
+        m = re.search(r, file, flags=(re.MULTILINE | re.DOTALL))
+        assert m, 'javaのコードが見つかりません.'
+        code = m.group('code')
+        #print(code)
+
+        r = r'.+public\s+(?P<aaa>.+);$'
+        ms = list(re.finditer(r, code, flags=(re.MULTILINE)))
+        if len(ms):
+            for m in ms:
+                print(m.group("aaa"))
 
     def analize(self):
         if self._debug['decompile']:
@@ -91,9 +116,10 @@ class JavaAnalize():
             with path.open(mode='r') as f:
                 buf = f.read()
             for k, v in self._spring.items():
-                if self.checkSpringType(v, buf):
+                if self.checkSpringType(v['checkAnnotations'], buf):
                     cn, impl = self.getClass(buf)
-                    print('%s(%s) is %s' % (cn, impl, k))
+                    print('%s(implements %s) is %s' % (cn, impl, k))
+                    self.findMethods(buf)
 
 if __name__ == '__main__':
     ana = JavaAnalize()
