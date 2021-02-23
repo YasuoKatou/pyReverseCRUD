@@ -3,13 +3,14 @@
         "debug": {
             "decompile": false
         },
-        "jdk-path": "D:\\Oracle\\Java\\jdk-15.0.2\\bin",
+        "jdk-path": "Z:\\Oracle\\Java\\jdk-15.0.2\\bin",
         "javap-options": "-c -v -p -l",
-        "work-path": "C:\\Users\\YasuoKatou\\Documents\\GitHub\\pyReverseCRUD\\resources\\projects\\sample002",
+        "work-path": "Z:\\workspace\\GitHub\\pyReverseCRUD\\resources\\projects\\sample002",
         "Project": {
-            "path": "C:\\Users\\YasuoKatou\\workspace\\java\\sample002",
+            "path": "Z:\\workspace\\java\\sample002",
             "java-src": "\\src\\main\\java",
-            "classes": "\\target\\classes"
+            "classes": "\\target\\classes",
+            "mapper-xml": "\\src\\main\\resources\\dao"
         },
         "spring": {
             "controller": {

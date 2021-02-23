@@ -108,4 +108,14 @@ if __name__ == '__main__':
 	r = reader.readXmls(xmlRoot = xmlRoot / 'resources' / 'sources')
 
 	judgment(r)
+	'''
+	引数：DaoReader.readXmlsの戻り値
+	出力は、DaoReader.readXmlsの「FQCN_(n).dml.DML_(n)」に下記内容を追加する
+    "crud": {
+      "create": [],
+      "select": [(table_name1)(, table_name2)],
+      "update": [],
+      "delete": []
+    }
+	'''
 #[EOF]

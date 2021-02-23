@@ -71,15 +71,35 @@ def formatCrudSheet(sheet, crud_config):
 
 		col += num * 4
 
+def formatClassMethods(sheet, crud_config, pinfo):
+	row = 3
+	#クラス種別順で出力
+	for class_type in ['controller', 'service', 'component', 'mapper' ,'other']:
+		sheet.cell(row=row, column=1, value=class_type.capitalize())
+		#クラスの出力順をFQCNの昇順で出力
+		cl = sorted(pinfo[class_type].items(), key=lambda x:x[0])
+		for c in cl:
+			sheet.cell(row=row, column=2, value=c[0])
+			#メソッド種別順で出力
+			for method_type in ['constructor', 'public-method', 'private-method']:
+				#メソッド名の昇順で出力
+				ml = sorted(c[1]['methods'][method_type], key=lambda x:x['name'])
+				for m in ml:
+					sheet.cell(row=row, column=3, value=m['name'])
+					row += 1
+
 def outExcel(r):
 	crud_config = getCrudConfig()
 	#print(crud_config)
 
 	book = openpyxl.Workbook()
 	sheet = book.worksheets[0]
-	sheet.title = "CRUD"
 
-	formatCrudSheet(sheet, crud_config)
+	formatClassMethods(sheet, crud_config, r)
+	sheet.title = 'class methods'
+
+	#sheet.title = "CRUD"
+	#formatCrudSheet(sheet, crud_config)
 
 	book.save(getExcelBookPath())
 	book.close()

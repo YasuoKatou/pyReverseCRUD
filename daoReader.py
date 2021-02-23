@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import pathlib
 import re
 import xml.etree.ElementTree as ET
 
@@ -46,7 +47,7 @@ class DaoReader():
 
     def readXmls(self, xmlRoot = None):
         if not xmlRoot:
-            xmlRoot = self.resourceRoot
+            xmlRoot = pathlib.Path(self.resourceRoot)
         print('xml root : %s' % str(xmlRoot))
         rr = {}
         for path in list(xmlRoot.glob('**/*.xml')):
@@ -73,7 +74,6 @@ class DaoReader():
         return rr
 
 if __name__ == '__main__':
-    import pathlib
     import sys
 
     xmlRoot = ''
@@ -86,4 +86,26 @@ if __name__ == '__main__':
 
     reader = DaoReader()
     reader.readXmls(xmlRoot = xmlRoot / 'resources' / 'sources')
+    '''
+    {
+      FQCN_1 (= tag:mapper attribute:namespace): {
+        "mapper" {
+          "interface": (interface name of FQCN_1)
+          "package":   (package name of FQCN_1)
+        },
+        "dml" {
+          DML_1 (= tag:select attribute:id): {
+            "type": (= tag:insert/select/update/delete),
+            "query": [
+              query source  (次のステップで対象テーブルを判定する)
+            ]
+          }
+        }
+      }
+    },{
+      FQCN_2 (= tag:mapper attribute:namespace): {
+        :
+        :
+    }
+    '''
 #[EOF]
