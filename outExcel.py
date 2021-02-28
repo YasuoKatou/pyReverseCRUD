@@ -40,7 +40,7 @@ def formatCrudSheet(sheet, crud_config):
 				# テーブル名
 				r = row + 1
 				c = col + count * 4
-				d = sheet.cell(row=r, column=c, value=k)
+				d = sheet.cell(row=r, column=c, value='%s\n%s' % (v,k))
 				d.alignment = alignment1
 				sheet.merge_cells(start_row=r, start_column=c, end_row=r, end_column=col+(count+1)*4-1)
 				# insert
@@ -72,7 +72,9 @@ def formatCrudSheet(sheet, crud_config):
 		col += num * 4
 
 def formatClassMethods(sheet, crud_config, pinfo):
-	row = 3
+	excel_config = crud_config['Excel']
+	start_row = excel_config['start_row']
+	row = start_row + excel_config['header_rows']
 	#クラス種別順で出力
 	for class_type in ['controller', 'service', 'component', 'mapper' ,'other']:
 		sheet.cell(row=row, column=1, value=class_type.capitalize())
@@ -88,6 +90,20 @@ def formatClassMethods(sheet, crud_config, pinfo):
 					sheet.cell(row=row, column=3, value=m['name'])
 					row += 1
 
+def setColumnWidth(sheet):
+	def _setColumnWidth(col_no):
+		max_width = 0
+		columns = list(sheet.columns)[col_no-1]
+		for cell in columns:
+			if len(str(cell.value)) > max_width:
+				max_width = len(str(cell.value))
+		#adjusted_width = (max_width + 2) * 1.2
+		adjusted_width = max_width
+		sheet.column_dimensions[columns[0].column_letter].width = adjusted_width
+	_setColumnWidth(1)    #クラスタイプ
+	_setColumnWidth(2)	  #FQCN
+	_setColumnWidth(3)	  #メソッド
+
 def outExcel(r):
 	crud_config = getCrudConfig()
 	#print(crud_config)
@@ -95,11 +111,11 @@ def outExcel(r):
 	book = openpyxl.Workbook()
 	sheet = book.worksheets[0]
 
+	sheet.title = 'crud methods'
+	formatCrudSheet(sheet, crud_config)
 	formatClassMethods(sheet, crud_config, r)
-	sheet.title = 'class methods'
 
-	#sheet.title = "CRUD"
-	#formatCrudSheet(sheet, crud_config)
+	setColumnWidth(sheet)
 
 	book.save(getExcelBookPath())
 	book.close()

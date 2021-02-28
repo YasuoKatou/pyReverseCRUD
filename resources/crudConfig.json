@@ -52,8 +52,9 @@
         }
     },
     "Excel": {
-        "start_row": 5,
-        "start_column": 3,
+        "start_row": 1,
+        "header_rows": 3,
+        "start_column": 4,
         "crud_width": 3,
         "tables": {
             "master": "マスタ系",

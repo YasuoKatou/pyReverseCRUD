@@ -48,7 +48,7 @@ class DaoReader():
     def readXmls(self, xmlRoot = None):
         if not xmlRoot:
             xmlRoot = pathlib.Path(self.resourceRoot)
-        print('xml root : %s' % str(xmlRoot))
+        print('Mapper xml root : %s' % str(xmlRoot))
         rr = {}
         for path in list(xmlRoot.glob('**/*.xml')):
             print('read : %s' % str(path))
@@ -57,7 +57,7 @@ class DaoReader():
             r = {'mapper': None, 'dml': {}}
             root = ET.parse(str(path))
             for child in root.iter():
-                print(child.tag, child.attrib)
+                #print(child.tag, child.attrib)
                 tagName = child.tag.lower()
                 if tagName == 'mapper':
                     ns = child.attrib['namespace']

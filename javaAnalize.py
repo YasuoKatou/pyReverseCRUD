@@ -109,6 +109,14 @@ class JavaAnalize():
 
         return fqcn, impl
 
+    def prepare(self, map_info):
+        '''
+        javapで参照するマッパーのキーワードを作成
+        '''
+        for fqcn, v1 in map_info.items():
+            for method_name, v2 in v1['dml'].items():
+                v2['javap'] = '%s.%s' % (fqcn.replace('.', '/'), method_name)
+
     def findMethods(self, file):
         r = r'\{(?P<code>.+)\}'
         m = re.search(r, file, flags=(re.MULTILINE | re.DOTALL))
@@ -120,20 +128,19 @@ class JavaAnalize():
         #コンストラクタの判定
         r = r'(public|private)\s+(?P<fqcn>\S+)\((?P<args>\S*)\);$'
         for m in list(re.finditer(r, code, flags=(re.MULTILINE))):
-            #print(m.group('fqcn'))
+            #print(str(m.string))
             nm = m.group('fqcn').split('.')[-1]
-            #print(nm)
             ret['constructor'].append({'name': nm, 'args': m.group('args')})
         #メソッドの判定
         r = r'(?P<scope>(public|private))\s+(?P<ret>\S+)\s+(?P<method_name>\S+)\((?P<args>\S*)\);$'
         for m in list(re.finditer(r, code, flags=(re.MULTILINE))):
-            #print(m.group('scope') + ' ' + m.group('method_name'))
+            #print(str(m.string))
             scope = 'public-method' if m.group('scope') == 'public' else 'private-method'
             ret[scope].append({'name': m.group('method_name'), 'args': m.group('args')})
         #メソッドの判定(インターフェース用)
         r = r'(?P<scope>(public|private))\s+abstract\s+(?P<ret>\S+)\s+(?P<method_name>\S+)\((?P<args>\S*)\);$'
         for m in list(re.finditer(r, code, flags=(re.MULTILINE))):
-            #print(m.group('scope') + ' ' + m.group('method_name'))
+            #print(str(m.string))
             scope = 'public-method' if m.group('scope') == 'public' else 'private-method'
             ret[scope].append({'name': m.group('method_name'), 'args': m.group('args')})
         ##r = r'.+public\s+(?P<aaa>.+);$'
@@ -149,7 +156,24 @@ class JavaAnalize():
         #            print(code[ms[idx].start():])
         return ret
 
-    def _analize_1(self):
+    def _getDaoInterfaceMethodref(self, file, map_info):
+        '''
+        デコンパイルの結果からDao呼び出しの一覧を作成
+        '''
+        r = r'\s*(?P<ref_no>#\d+)\s*=\s*InterfaceMethodref\s*\S+\s*\/\/\s*(?P<fqcn_method>[^\.]+\.\w+)'
+        ret = {}
+        for m in list(re.finditer(r, file)):
+            fqcn_method = m.group('fqcn_method')
+            #print('%s - %s' % (m.group('ref_no'), fqcn_method))
+            for v1 in map_info.values():
+                for v2 in v1['dml'].values():
+                    if fqcn_method == v2['javap']:
+                        ref_no = m.group('ref_no')
+                        #print('%s - %s' % (ref_no, fqcn_method))
+                        ret[ref_no] = fqcn_method
+        return ret
+
+    def _analize_1(self, map_info):
         '''
         ソースファイルをアノテーションから分類する.
         分類：コントローラ、サービス、コンポーネント、マッパー、その他
@@ -159,6 +183,7 @@ class JavaAnalize():
         classes = pathlib.Path(self._workPath)
         # クラスの種別（コントローラ、サービス、コンポーネント）を判定
         for path in list(classes.glob('**/*.class')):
+            print(str(path))
             with path.open(mode='r') as f:
                 buf = f.read()
                 spring_type = self.checkSpringType(buf)
@@ -169,10 +194,12 @@ class JavaAnalize():
                     self._project[spring_type][cn] = java_info
                 else:
                     self._project['other'][cn] = java_info
+                java_info['mapper-refs'] = self._getDaoInterfaceMethodref(buf, map_info)
                 java_info['methods'] = self.findMethods(buf)
 
-    def analize(self):
-        self._analize_1()
+    def analize(self, map_info):
+        self.prepare(map_info)
+        self._analize_1(map_info)
         '''
         self._project = {
           "controller": {    -- コントローラクラス一覧
@@ -200,9 +227,9 @@ if __name__ == '__main__':
 
     ana = JavaAnalize()
     dao = DaoReader(ana.getMapperXMLPath())
-    r = dao.readXmls()
-    judgment(r)
-    ana.analize()
+    map_info = dao.readXmls()
+    judgment(map_info)
+    ana.analize(map_info)
     outExcel(ana._project)
     print('解析終了')
 #[EOF]

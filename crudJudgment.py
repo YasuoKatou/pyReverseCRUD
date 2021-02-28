@@ -88,7 +88,7 @@ def judgment(dao_list):
 						crud['delete'].append(tn)
 
 			dml['crud'] = crud
-			print(dml)
+			#print(dml)
 
 if __name__ == '__main__':
 	import pathlib
