@@ -59,7 +59,7 @@ class JavaAnalize():
             print('java class のルートパスが見つかりません(' + self._projectClasses +')')
             sys.exit(1)
 
-        javap = self._jdkPath + '\\javap' + ' ' + self._javapOptions
+        javap = "\"%s\\javap\" %s" % (self._jdkPath, self._javapOptions)
         pos = len(str(classes))
         for path in list(classes.glob('**/*.class')):
             print('java class : %s' % str(path))
@@ -88,15 +88,17 @@ class JavaAnalize():
         クラス(インターフェース)ファイルのFQCNとimplementsを取得する
         '''
         fqcn = None
+        isClass = False
         # クラスの判定(public class xxxx {)
-        key = r'public\s+class\s+(?P<fqcn>\S+)'
-        m = re.search(key, file)
+        key = r'^(public\s+class|public\s+final\s+class|public\s+abstract\s+class|class)\s+(?P<fqcn>\S+)'
+        m = re.search(key, file, flags=(re.MULTILINE))
         if m:
             fqcn = m.group('fqcn')
+            isClass = True
         else:
             # インターフェースの判定（public interface xxx {)
-            key = r'public\s+interface\s+(?P<fqcn>\S+)'
-            m = re.search(key, file)
+            key = r'^(public\s+interface|interface)\s+(?P<fqcn>\S+)'
+            m = re.search(key, file, flags=(re.MULTILINE))
             if m:
                 fqcn = m.group('fqcn')
 
@@ -107,7 +109,7 @@ class JavaAnalize():
         if m:
             impl = m.group('impl')
 
-        return fqcn, impl
+        return fqcn, impl, isClass
 
     def prepare(self, map_info):
         '''
@@ -126,19 +128,19 @@ class JavaAnalize():
 
         ret = {'constructor':[], 'public-method': [], 'private-method': []}
         #コンストラクタの判定
-        r = r'(public|private)\s+(?P<fqcn>\S+)\((?P<args>\S*)\);$'
+        r = r'(public|private)\s+(?P<fqcn>\S+)\((?P<args>[^\(\)]*)\);$'
         for m in list(re.finditer(r, code, flags=(re.MULTILINE))):
             #print(str(m.string))
             nm = m.group('fqcn').split('.')[-1]
             ret['constructor'].append({'name': nm, 'args': m.group('args')})
         #メソッドの判定
-        r = r'(?P<scope>(public|private))\s+(?P<ret>\S+)\s+(?P<method_name>\S+)\((?P<args>\S*)\);$'
+        r = r'(?P<scope>(public|private))\s+(?P<ret>\S+)\s+(?P<method_name>\S+)\((?P<args>[^\(\)]*)\);$'
         for m in list(re.finditer(r, code, flags=(re.MULTILINE))):
             #print(str(m.string))
             scope = 'public-method' if m.group('scope') == 'public' else 'private-method'
             ret[scope].append({'name': m.group('method_name'), 'args': m.group('args')})
         #メソッドの判定(インターフェース用)
-        r = r'(?P<scope>(public|private))\s+abstract\s+(?P<ret>\S+)\s+(?P<method_name>\S+)\((?P<args>\S*)\);$'
+        r = r'(?P<scope>(public|private))\s+abstract\s+(?P<ret>\S+)\s+(?P<method_name>\S+)\((?P<args>[^\(\)]*)\);$'
         for m in list(re.finditer(r, code, flags=(re.MULTILINE))):
             #print(str(m.string))
             scope = 'public-method' if m.group('scope') == 'public' else 'private-method'
@@ -184,12 +186,13 @@ class JavaAnalize():
         # クラスの種別（コントローラ、サービス、コンポーネント）を判定
         for path in list(classes.glob('**/*.class')):
             print(str(path))
-            with path.open(mode='r') as f:
+            with path.open(mode='r', encoding='utf-8') as f:
                 buf = f.read()
                 spring_type = self.checkSpringType(buf)
-                cn, impl = self.getClass(buf)
+                cn, impl, isClass = self.getClass(buf)
+                assert cn, 'no class/interface [%s]' % str(path)
                 #print('%s(implements %s) is %s' % (cn, impl, spring_type))
-                java_info = {'decompile_path': path, 'implements': impl}
+                java_info = {'decompile_path': path, 'implements': impl, "isClass": isClass}
                 if spring_type:
                     self._project[spring_type][cn] = java_info
                 else:

@@ -3,6 +3,7 @@ import datetime
 import json
 import openpyxl
 import pathlib
+import re
 
 from openpyxl.styles import Border, Side, PatternFill, Font, GradientFill, Alignment
 
@@ -72,6 +73,7 @@ def formatCrudSheet(sheet, crud_config):
 		col += num * 4
 
 def formatClassMethods(sheet, crud_config, pinfo):
+	RE_EXCLUDE_CLASS = r'.+(Dto|Entity)$'
 	excel_config = crud_config['Excel']
 	start_row = excel_config['start_row']
 	row = start_row + excel_config['header_rows']
@@ -81,6 +83,10 @@ def formatClassMethods(sheet, crud_config, pinfo):
 		#クラスの出力順をFQCNの昇順で出力
 		cl = sorted(pinfo[class_type].items(), key=lambda x:x[0])
 		for c in cl:
+			if re.match(RE_EXCLUDE_CLASS, c[0]):
+				continue
+			if not c[1]['isClass']:
+				continue
 			sheet.cell(row=row, column=2, value=c[0])
 			#メソッド種別順で出力
 			for method_type in ['constructor', 'public-method', 'private-method']:
