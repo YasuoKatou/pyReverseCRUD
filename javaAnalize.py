@@ -32,6 +32,17 @@ class JavaAnalize():
             "mapper": {},        # = analize.spring.mapper in crudConfig.json
             "other": {},         # else
         }
+        java_re = analize['source-re']
+        self._java_re = {
+            'class-re': re.compile(java_re['class-re'], flags=(re.MULTILINE)),
+            'interface-re': re.compile(java_re['interface-re'], flags=(re.MULTILINE)),
+            'implements-re': re.compile(java_re['implements-re'], flags=(re.MULTILINE)),
+            'constructor-re': re.compile(java_re['constructor-re'], flags=(re.MULTILINE)),
+            'method1-re': re.compile(java_re['method1-re'], flags=(re.MULTILINE)),
+            'method2-re': re.compile(java_re['method2-re'], flags=(re.MULTILINE)),
+            'InterfaceMethodref-re': re.compile(java_re['InterfaceMethodref-re']),
+            'code-block-re': re.compile(java_re['code-block-re'], flags=(re.MULTILINE | re.DOTALL)),
+        }
         # ワークフォルダを初期化する
         if self._debug['decompile']:
             wp = pathlib.Path(self._workPath)
@@ -90,22 +101,19 @@ class JavaAnalize():
         fqcn = None
         isClass = False
         # クラスの判定(public class xxxx {)
-        key = r'^(public\s+class|public\s+final\s+class|public\s+abstract\s+class|class)\s+(?P<fqcn>\S+)'
-        m = re.search(key, file, flags=(re.MULTILINE))
+        m = re.search(self._java_re['class-re'], file)
         if m:
             fqcn = m.group('fqcn')
             isClass = True
         else:
             # インターフェースの判定（public interface xxx {)
-            key = r'^(public\s+interface|interface)\s+(?P<fqcn>\S+)'
-            m = re.search(key, file, flags=(re.MULTILINE))
+            m = re.search(self._java_re['interface-re'], file)
             if m:
                 fqcn = m.group('fqcn')
 
         impl = None
         # implementsを判定
-        key = r'public\s+class\s+\S+\s+implements\s+(?P<impl>\S+)'
-        m = re.search(key, file)
+        m = re.search(self._java_re['implements-re'], file)
         if m:
             impl = m.group('impl')
 
@@ -120,28 +128,24 @@ class JavaAnalize():
                 v2['javap'] = '%s.%s' % (fqcn.replace('.', '/'), method_name)
 
     def findMethods(self, file):
-        r = r'\{(?P<code>.+)\}'
-        m = re.search(r, file, flags=(re.MULTILINE | re.DOTALL))
+        m = re.search(self._java_re['code-block-re'], file)
         assert m, 'javaのコードが見つかりません.'
         code = m.group('code')
         #print(code)
 
         ret = {'constructor':[], 'public-method': [], 'private-method': []}
         #コンストラクタの判定
-        r = r'(public|private)\s+(?P<fqcn>\S+)\((?P<args>[^\(\)]*)\);$'
-        for m in list(re.finditer(r, code, flags=(re.MULTILINE))):
+        for m in list(re.finditer(self._java_re['constructor-re'], code)):
             #print(str(m.string))
             nm = m.group('fqcn').split('.')[-1]
             ret['constructor'].append({'name': nm, 'args': m.group('args')})
         #メソッドの判定
-        r = r'(?P<scope>(public|private))\s+(?P<ret>\S+)\s+(?P<method_name>\S+)\((?P<args>[^\(\)]*)\);$'
-        for m in list(re.finditer(r, code, flags=(re.MULTILINE))):
+        for m in list(re.finditer(self._java_re['method1-re'], code)):
             #print(str(m.string))
             scope = 'public-method' if m.group('scope') == 'public' else 'private-method'
             ret[scope].append({'name': m.group('method_name'), 'args': m.group('args')})
         #メソッドの判定(インターフェース用)
-        r = r'(?P<scope>(public|private))\s+abstract\s+(?P<ret>\S+)\s+(?P<method_name>\S+)\((?P<args>[^\(\)]*)\);$'
-        for m in list(re.finditer(r, code, flags=(re.MULTILINE))):
+        for m in list(re.finditer(self._java_re['method2-re'], code)):
             #print(str(m.string))
             scope = 'public-method' if m.group('scope') == 'public' else 'private-method'
             ret[scope].append({'name': m.group('method_name'), 'args': m.group('args')})
@@ -162,9 +166,8 @@ class JavaAnalize():
         '''
         デコンパイルの結果からDao呼び出しの一覧を作成
         '''
-        r = r'\s*(?P<ref_no>#\d+)\s*=\s*InterfaceMethodref\s*\S+\s*\/\/\s*(?P<fqcn_method>[^\.]+\.\w+)'
         ret = {}
-        for m in list(re.finditer(r, file)):
+        for m in list(re.finditer(self._java_re['InterfaceMethodref-re'], file)):
             fqcn_method = m.group('fqcn_method')
             #print('%s - %s' % (m.group('ref_no'), fqcn_method))
             for v1 in map_info.values():
