@@ -32,16 +32,15 @@ class JavaAnalize():
             "mapper": {},        # = analize.spring.mapper in crudConfig.json
             "other": {},         # else
         }
-        java_re = analize['source-re']
         self._java_re = {
-            'class-re': re.compile(java_re['class-re'], flags=(re.MULTILINE)),
-            'interface-re': re.compile(java_re['interface-re'], flags=(re.MULTILINE)),
-            'implements-re': re.compile(java_re['implements-re'], flags=(re.MULTILINE)),
-            'constructor-re': re.compile(java_re['constructor-re'], flags=(re.MULTILINE)),
-            'method1-re': re.compile(java_re['method1-re'], flags=(re.MULTILINE)),
-            'method2-re': re.compile(java_re['method2-re'], flags=(re.MULTILINE)),
-            'InterfaceMethodref-re': re.compile(java_re['InterfaceMethodref-re']),
-            'code-block-re': re.compile(java_re['code-block-re'], flags=(re.MULTILINE | re.DOTALL)),
+            'class-re': re.compile(r'^(public\s+class|public\s+final\s+class|public\s+abstract\s+class|class)\s+(?P<fqcn>\S+)', flags=(re.MULTILINE)),
+            'interface-re': re.compile(r'^(public\s+interface|interface)\s+(?P<fqcn>\S+)', flags=(re.MULTILINE)),
+            'implements-re': re.compile(r'public\s+class\s+\S+\s+implements\s+(?P<impl>\S+)', flags=(re.MULTILINE)),
+            'constructor-re': re.compile(r'(public|private)\s+(?P<fqcn>\S+)\((?P<args>[^\(\)]*)\);$', flags=(re.MULTILINE)),
+            'method1-re': re.compile(r'(?P<scope>(public|private))\s+(?P<ret>\S+)\s+(?P<method_name>\S+)\((?P<args>[^\(\)]*)\);$', flags=(re.MULTILINE)),
+            'method2-re': re.compile(r'(?P<scope>(public|private))\s+abstract\s+(?P<ret>\S+)\s+(?P<method_name>\S+)\((?P<args>[^\(\)]*)\);$', flags=(re.MULTILINE)),
+            'InterfaceMethodref-re': re.compile(r'\s*(?P<ref_no>#\d+)\s*=\s*InterfaceMethodref\s*\S+\s*\/\/\s*(?P<fqcn_method>[^\.]+\.\w+)'),
+            'code-block-re': re.compile(r'\{(?P<code>.+)\}', flags=(re.MULTILINE | re.DOTALL)),
         }
         # ワークフォルダを初期化する
         if self._debug['decompile']:
@@ -228,13 +227,11 @@ class JavaAnalize():
         }
         '''
 if __name__ == '__main__':
-    from crudJudgment import judgment
     from outExcel import outExcel
 
     ana = JavaAnalize()
     dao = DaoReader(ana.getMapperXMLPath())
     map_info = dao.readXmls()
-    judgment(map_info)
     ana.analize(map_info)
     outExcel(ana._project)
     print('解析終了')

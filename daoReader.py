@@ -4,6 +4,8 @@ import pathlib
 import re
 import xml.etree.ElementTree as ET
 
+from crudJudgment import judgment
+
 class DaoReader():
     def __init__(self, resourceRoot = None):
         self.resourceRoot = resourceRoot
@@ -71,6 +73,7 @@ class DaoReader():
                 tagName = child.tag.lower()
                 if tagName in ('select', 'insert', 'update', 'delete'):
                   r['dml'][child.attrib['id']] = self.expandDml(tagName, child, sqlIncludes)
+            judgment(r)
         return rr
 
 if __name__ == '__main__':

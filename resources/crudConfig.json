@@ -49,16 +49,6 @@
                 "isComponent": false,
                 "isMapper": true
             }
-        },
-        "source-re": {
-            "class-re": "^(public\\s+class|public\\s+final\\s+class|public\\s+abstract\\s+class|class)\\s+(?P<fqcn>\\S+)",
-            "interface-re": "^(public\\s+interface|interface)\\s+(?P<fqcn>\\S+)",
-            "implements-re": "public\\s+class\\s+\\S+\\s+implements\\s+(?P<impl>\\S+)",
-            "constructor-re": "(public|private)\\s+(?P<fqcn>\\S+)\\((?P<args>[^\\(\\)]*)\\);$",
-            "method1-re": "(?P<scope>(public|private))\\s+(?P<ret>\\S+)\\s+(?P<method_name>\\S+)\\((?P<args>[^\\(\\)]*)\\);$",
-            "method2-re": "(?P<scope>(public|private))\\s+abstract\\s+(?P<ret>\\S+)\\s+(?P<method_name>\\S+)\\((?P<args>[^\\(\\)]*)\\);$",
-            "InterfaceMethodref-re": "\\s*(?P<ref_no>#\\d+)\\s*=\\s*InterfaceMethodref\\s*\\S+\\s*\\/\\/\\s*(?P<fqcn_method>[^\\.]+\\.\\w+)",
-            "code-block-re": "\\{(?P<code>.+)\\}"
         }
     },
     "Excel": {

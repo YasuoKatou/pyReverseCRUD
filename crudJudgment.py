@@ -45,50 +45,54 @@ def delete_table(query):
 	f = (re.MULTILINE | re.IGNORECASE)
 	return re.search(_RD01, query, flags=f)
 
-def judgment(dao_list):
-	for dao in dao_list.values():
-		for dml in dao['dml'].values():
-			crud = {'create': [], 'update': [], 'read': [], 'delete': []}
-			query = "".join(dml['query'])
-			# from を調べる
-			ms = select_from_table(query)
-			if len(ms):
-				for m in ms:
-					tn = m.group("table_name")
-					if not tn in crud['read']:
-						crud['read'].append(tn)
-			# join を調べる
-			ms = join_table(query)
-			if len(ms):
-				for m in ms:
-					tn = m.group("join_name")
-					if not tn in crud['read']:
-						crud['read'].append(tn)
-			dmlType = dml['type']
-			if dmlType == 'insert':
-				# update 対象のテーブルを調べる
-				m = insert_table(query)
-				if m:
-					tn = m.group("table_name")
-					if not tn in crud['create']:
-						crud['create'].append(tn)
-			elif dmlType == 'update':
-				# update 対象のテーブルを調べる
-				m = update_table(query)
-				if m:
-					tn = m.group("table_name")
-					if not tn in crud['update']:
-						crud['update'].append(tn)
-			elif dmlType == 'delete':
-				# delete 対象のテーブルを調べる
-				m = delete_table(query)
-				if m:
-					tn = m.group("table_name")
-					if not tn in crud['delete']:
-						crud['delete'].append(tn)
+def judgment(dao):
+	for dml in dao['dml'].values():
+		crud = {'create': [], 'update': [], 'read': [], 'delete': []}
+		query = "".join(dml['query'])
+		# from を調べる
+		ms = select_from_table(query)
+		if len(ms):
+			for m in ms:
+				tn = m.group("table_name")
+				if not tn in crud['read']:
+					crud['read'].append(tn)
+		# join を調べる
+		ms = join_table(query)
+		if len(ms):
+			for m in ms:
+				tn = m.group("join_name")
+				if not tn in crud['read']:
+					crud['read'].append(tn)
+		dmlType = dml['type']
+		if dmlType == 'insert':
+			# update 対象のテーブルを調べる
+			m = insert_table(query)
+			if m:
+				tn = m.group("table_name")
+				if not tn in crud['create']:
+					crud['create'].append(tn)
+		elif dmlType == 'update':
+			# update 対象のテーブルを調べる
+			m = update_table(query)
+			if m:
+				tn = m.group("table_name")
+				if not tn in crud['update']:
+					crud['update'].append(tn)
+		elif dmlType == 'delete':
+			# delete 対象のテーブルを調べる
+			m = delete_table(query)
+			if m:
+				tn = m.group("table_name")
+				if not tn in crud['delete']:
+					crud['delete'].append(tn)
 
-			dml['crud'] = crud
-			#print(dml)
+		dml['crud'] = crud
+		del dml['query']
+		#print(dml)
+
+def judgmentAll(dao_list):
+	for dao in dao_list.values():
+		judgment(dao)
 
 if __name__ == '__main__':
 	import pathlib
@@ -117,5 +121,6 @@ if __name__ == '__main__':
       "update": [],
       "delete": []
     }
+	また、r[FQCN_1]['dml'][DML_1]['query']要素はCRUDの判定後、削除する
 	'''
 #[EOF]
