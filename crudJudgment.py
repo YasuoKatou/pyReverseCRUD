@@ -117,7 +117,7 @@ if __name__ == '__main__':
 	出力は、DaoReader.readXmlsの「FQCN_(n).dml.DML_(n)」に下記内容を追加する
     "crud": {
       "create": [],
-      "select": [(table_name1)(, table_name2)],
+      "read": [(table_name1)(, table_name2)],
       "update": [],
       "delete": []
     }

@@ -1,7 +1,8 @@
 {
     "analize": {
         "debug": {
-            "decompile": false
+            "decompile": false,
+            "mapper-excel": true
         },
         "jdk-path": "Z:\\Oracle\\Java\\jdk-15.0.2\\bin",
         "javap-options": "-c -v -p -l",
@@ -68,7 +69,10 @@
         ],
         "transaction": [
             {"products": "製品"},
-            {"some_table": "トランザクションテーブル"}
+            {"some_table": "トランザクションテーブル"},
+            {"table": "テーブル1"},
+            {"hoge": "テーブル2"},
+            {"fuga": "テーブル3"}
         ]
     }
 }

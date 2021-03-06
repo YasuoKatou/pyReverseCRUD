@@ -228,10 +228,13 @@ class JavaAnalize():
         '''
 if __name__ == '__main__':
     from outExcel import outExcel
+    from outExcel import outMapperInfo
 
     ana = JavaAnalize()
     dao = DaoReader(ana.getMapperXMLPath())
     map_info = dao.readXmls()
+    if ana._debug['mapper-excel']:
+        outMapperInfo(map_info)
     ana.analize(map_info)
     outExcel(ana._project)
     print('解析終了')

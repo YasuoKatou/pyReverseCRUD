@@ -7,10 +7,10 @@ import re
 
 from openpyxl.styles import Border, Side, PatternFill, Font, GradientFill, Alignment
 
-def getExcelBookPath():
+def getExcelBookPath(prefix):
 	def getExcelBookName():
 		now = datetime.datetime.now()
-		return now.strftime("crud_%Y%m%d_%H%M%S.xlsx")
+		return prefix + now.strftime("_%Y%m%d_%H%M%S.xlsx")
 	myPath = pathlib.Path(__file__)
 	xmlRoot = myPath.parent
 	return xmlRoot / 'resources' / getExcelBookName()
@@ -29,6 +29,7 @@ def formatCrudSheet(sheet, crud_config):
 	row = start_row
 	col = start_column
 	alignment1 = Alignment(horizontal="center", vertical="center")
+	table_list = []
 	for key, name in excel_config['tables'].items():
 		print(key + ': ' + name)
 		num = len(crud_config['tables'][key])
@@ -38,6 +39,7 @@ def formatCrudSheet(sheet, crud_config):
 		count = 0
 		for table in crud_config['tables'][key]:
 			for k, v in table.items():
+				table_list.append(k)
 				# テーブル名
 				r = row + 1
 				c = col + count * 4
@@ -71,6 +73,7 @@ def formatCrudSheet(sheet, crud_config):
 				count += 1
 
 		col += num * 4
+	return table_list
 
 def formatClassMethods(sheet, crud_config, pinfo):
 	RE_EXCLUDE_CLASS = r'.+(Dto|Entity)$'
@@ -123,7 +126,53 @@ def outExcel(r):
 
 	setColumnWidth(sheet)
 
-	book.save(getExcelBookPath())
+	book.save(getExcelBookPath(prefix='crud'))
+	book.close()
+
+def outMapperInfo(map_info):
+	crud_config = getCrudConfig()
+	excel_config = crud_config['Excel']
+	start_row = excel_config['start_row']
+	start_column = excel_config['start_column']
+	row = start_row + excel_config['header_rows']
+	alignment1 = Alignment(horizontal="center", vertical="center")
+	def setCURD(crud_info):
+		for crud_type, crud_tables in crud_info.items():
+			for table in crud_tables:
+				if table not in table_list:
+					print('[%s] is not in CRUD list' % table)
+					continue
+				pos = start_column + table_list.index(table) * 4
+				if crud_type == 'create':
+					#pos += 0
+					crud = 'C'
+				elif crud_type == 'read':
+					pos += 1
+					crud = 'R'
+				elif crud_type == 'update':
+					pos += 2
+					crud = 'U'
+				elif crud_type == 'delete':
+					pos += 3
+					crud = 'D'
+				else:
+					assert False, "[%s] is not supported by Excel write process" % crud_type
+				d = sheet.cell(row=row, column=pos, value=crud)
+				d.alignment = alignment1
+
+	book = openpyxl.Workbook()
+	sheet = book.worksheets[0]
+	sheet.title = 'mapper'
+	table_list = formatCrudSheet(sheet, crud_config)
+	for dao in sorted(map_info.items(), key=lambda x:x[0]):
+		sheet.cell(row=row, column=1, value=dao[0])
+		for map_id in sorted(dao[1]['dml'].items(), key=lambda x:(x[1]['type'], x[0])):
+			sheet.cell(row=row, column=2, value=map_id[1]['type'])
+			sheet.cell(row=row, column=3, value=map_id[0])
+			setCURD(map_id[1]['crud'])
+			row += 1
+
+	book.save(getExcelBookPath(prefix='mapper'))
 	book.close()
 
 if __name__ == '__main__':
