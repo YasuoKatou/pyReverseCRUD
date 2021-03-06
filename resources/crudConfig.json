@@ -2,7 +2,7 @@
     "analize": {
         "debug": {
             "decompile": false,
-            "mapper-excel": true
+            "mapper-excel": false
         },
         "jdk-path": "Z:\\Oracle\\Java\\jdk-15.0.2\\bin",
         "javap-options": "-c -v -p -l",
@@ -16,7 +16,8 @@
         "spring": {
             "controller": {
                 "checkAnnotations": {
-                    "RuntimeVisibleAnnotations:": ["org.springframework.stereotype.Controller"]
+                    "RuntimeVisibleAnnotations:": ["org.springframework.stereotype.Controller",
+                         "org.springframework.web.bind.annotation.RestController"]
                 },
                 "isController": true,
                 "isService": false,

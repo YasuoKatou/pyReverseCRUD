@@ -86,7 +86,7 @@ class JavaAnalize():
             for k, v in type_info['checkAnnotations'].items():
                 r = r + k + r'.*'
                 if isinstance(v, list):
-                    r += r'.*'.join(v)
+                    r = '(%s)' % '|'.join(v)
                 else:
                     r += v
                 if re.search(r, file, flags=re.MULTILINE | re.DOTALL):
