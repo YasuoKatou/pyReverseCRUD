@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import logging
 import pathlib
 import re
 import xml.etree.ElementTree as ET
@@ -50,10 +51,10 @@ class DaoReader():
     def readXmls(self, xmlRoot = None):
         if not xmlRoot:
             xmlRoot = pathlib.Path(self.resourceRoot)
-        print('Mapper xml root : %s' % str(xmlRoot))
+        logging.info('Mapper xml root : %s' % str(xmlRoot))
         rr = {}
         for path in list(xmlRoot.glob('**/*.xml')):
-            print('read : %s' % str(path))
+            logging.debug('read : %s' % str(path))
             dmlChildren = []
             sqlIncludes = {}
             r = {'mapper': None, 'dml': {}}

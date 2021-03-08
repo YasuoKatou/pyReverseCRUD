@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import logging
 import pathlib
 import re
 import shutil
@@ -33,8 +34,8 @@ class JavaAnalize():
             "other": {},         # else
         }
         self._java_re = {
-            'class-re': re.compile(r'^(public\s+class|public\s+final\s+class|public\s+abstract\s+class|class)\s+(?P<fqcn>\S+)', flags=(re.MULTILINE)),
-            'interface-re': re.compile(r'^(public\s+interface|interface)\s+(?P<fqcn>\S+)', flags=(re.MULTILINE)),
+            'class-re': re.compile(r'^(public|private)?\s*(final\s+)?(abstract\s+)?class\s+(?P<fqcn>\S+)', flags=(re.MULTILINE)),
+            'interface-re': re.compile(r'^(public|private)?\s*interface\s+(?P<fqcn>\S+)', flags=(re.MULTILINE)),
             'implements-re': re.compile(r'public\s+class\s+\S+\s+implements\s+(?P<impl>\S+)', flags=(re.MULTILINE)),
             'constructor-re': re.compile(r'(public|private)\s+(?P<fqcn>\S+)\((?P<args>[^\(\)]*)\);$', flags=(re.MULTILINE)),
             'method1-re': re.compile(r'(?P<scope>(public|private))\s+(?P<ret>\S+)\s+(?P<method_name>\S+)\((?P<args>[^\(\)]*)\);$', flags=(re.MULTILINE)),
@@ -44,6 +45,7 @@ class JavaAnalize():
         }
         # ワークフォルダを初期化する
         if self._debug['decompile']:
+            logging.info('init java decompile workspace')
             wp = pathlib.Path(self._workPath)
             if wp.exists():
                 shutil.rmtree(str(wp))
@@ -68,11 +70,12 @@ class JavaAnalize():
         if not classes.exists():
             print('java class のルートパスが見つかりません(' + self._projectClasses +')')
             sys.exit(1)
+        logging.info('java class file path : %s' % classes)
 
         javap = "\"%s\\javap\" %s" % (self._jdkPath, self._javapOptions)
         pos = len(str(classes))
         for path in list(classes.glob('**/*.class')):
-            print('java class : %s' % str(path))
+            logging.debug('java class : %s' % str(path))
             decompPath = pathlib.Path(self._workPath + str(path)[pos:])
             #if not decompPath.exists():
             decompPath.parent.mkdir(parents=True, exist_ok=True)
@@ -185,9 +188,10 @@ class JavaAnalize():
         if self._debug['decompile']:
             self.decompile()
         classes = pathlib.Path(self._workPath)
+        logging.info('java analize root : %s' % str(classes))
         # クラスの種別（コントローラ、サービス、コンポーネント）を判定
         for path in list(classes.glob('**/*.class')):
-            print(str(path))
+            logging.debug('java decompile source : %s' % str(path))
             with path.open(mode='r', encoding='utf-8') as f:
                 buf = f.read()
                 spring_type = self.checkSpringType(buf)
@@ -230,6 +234,10 @@ if __name__ == '__main__':
     from outExcel import outExcel
     from outExcel import outMapperInfo
 
+    log_format = '%(levelname)s : %(asctime)s : %(message)s'
+    logging.basicConfig(level=logging.DEBUG, format=log_format)
+    #logging.basicConfig(level=logging.INFO, format=log_format)
+
     ana = JavaAnalize()
     dao = DaoReader(ana.getMapperXMLPath())
     map_info = dao.readXmls()
@@ -237,5 +245,5 @@ if __name__ == '__main__':
         outMapperInfo(map_info)
     ana.analize(map_info)
     outExcel(ana._project)
-    print('解析終了')
+    logging.info('解析終了')
 #[EOF]

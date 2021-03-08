@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import json
+import logging
 import openpyxl
 import pathlib
 import re
@@ -31,7 +32,7 @@ def formatCrudSheet(sheet, crud_config):
 	alignment1 = Alignment(horizontal="center", vertical="center")
 	table_list = []
 	for key, name in excel_config['tables'].items():
-		print(key + ': ' + name)
+		logging.debug(key + ': ' + name)
 		num = len(crud_config['tables'][key])
 		d = sheet.cell(row=row, column=col, value=name)
 		d.alignment = alignment1
@@ -39,7 +40,7 @@ def formatCrudSheet(sheet, crud_config):
 		count = 0
 		for table in crud_config['tables'][key]:
 			for k, v in table.items():
-				table_list.append(k)
+				table_list.append(k.lower())
 				# テーブル名
 				r = row + 1
 				c = col + count * 4
@@ -139,6 +140,7 @@ def outMapperInfo(map_info):
 	def setCURD(crud_info):
 		for crud_type, crud_tables in crud_info.items():
 			for table in crud_tables:
+				table = table.lower()
 				if table not in table_list:
 					print('[%s] is not in CRUD list' % table)
 					continue
