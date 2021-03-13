@@ -37,11 +37,9 @@ class JavaAnalize():
             'class-re': re.compile(r'^(public|private)?\s*(final\s+)?(abstract\s+)?class\s+(?P<fqcn>\S+)', flags=(re.MULTILINE)),
             'interface-re': re.compile(r'^(public|private)?\s*interface\s+(?P<fqcn>\S+)', flags=(re.MULTILINE)),
             'implements-re': re.compile(r'public\s+class\s+\S+\s+implements\s+(?P<impl>\S+)', flags=(re.MULTILINE)),
-            'constructor-re': re.compile(r'(public|private)\s+(?P<fqcn>\S+)\((?P<args>[^\(\)]*)\);$', flags=(re.MULTILINE)),
-            'method1-re': re.compile(r'(?P<scope>(public|private))\s+(?P<ret>\S+)\s+(?P<method_name>\S+)\((?P<args>[^\(\)]*)\);$', flags=(re.MULTILINE)),
-            'method2-re': re.compile(r'(?P<scope>(public|private))\s+abstract\s+(?P<ret>\S+)\s+(?P<method_name>\S+)\((?P<args>[^\(\)]*)\);$', flags=(re.MULTILINE)),
+            'method-re': re.compile(r'(?P<deco>.*?)(?<!\/\/ Method )(?P<fqcn>[a-zA-Z0-9_\$\.]+)\((?P<args>[^\(\)]*)\).*;$', flags=(re.MULTILINE)),
             'InterfaceMethodref-re': re.compile(r'\s*(?P<ref_no>#\d+)\s*=\s*InterfaceMethodref\s*\S+\s*\/\/\s*(?P<fqcn_method>[^\.]+\.\w+)'),
-            'code-block-re': re.compile(r'\{(?P<code>.+)\}', flags=(re.MULTILINE | re.DOTALL)),
+            'code-block-re': re.compile(r'\{.+\}', flags=(re.DOTALL)),
         }
         # ワークフォルダを初期化する
         if self._debug['decompile']:
@@ -80,7 +78,7 @@ class JavaAnalize():
             #if not decompPath.exists():
             decompPath.parent.mkdir(parents=True, exist_ok=True)
             with decompPath.open(mode='w', encoding='utf-8') as f:
-                for line in self.command(javap + ' ' + str(path)):
+                for line in self.command(javap + ' \"' + str(path) + '\"'):
                     f.write(line + '\n')
 
     def checkSpringType(self, file):
@@ -129,39 +127,25 @@ class JavaAnalize():
             for method_name, v2 in v1['dml'].items():
                 v2['javap'] = '%s.%s' % (fqcn.replace('.', '/'), method_name)
 
-    def findMethods(self, file):
+    def findMethods(self, class_name, file):
         m = re.search(self._java_re['code-block-re'], file)
-        assert m, 'javaのコードが見つかりません.'
-        code = m.group('code')
+        assert m, 'javaのコードブロックが見つかりません.'
+        code = m.group(0)
         #print(code)
-
         ret = {'constructor':[], 'public-method': [], 'private-method': []}
-        #コンストラクタの判定
-        for m in list(re.finditer(self._java_re['constructor-re'], code)):
+        #コンストラクタ／メソッドの判定
+        for m in list(re.finditer(self._java_re['method-re'], code)):
             #print(str(m.string))
-            nm = m.group('fqcn').split('.')[-1]
-            ret['constructor'].append({'name': nm, 'args': m.group('args')})
-        #メソッドの判定
-        for m in list(re.finditer(self._java_re['method1-re'], code)):
-            #print(str(m.string))
-            scope = 'public-method' if m.group('scope') == 'public' else 'private-method'
-            ret[scope].append({'name': m.group('method_name'), 'args': m.group('args')})
-        #メソッドの判定(インターフェース用)
-        for m in list(re.finditer(self._java_re['method2-re'], code)):
-            #print(str(m.string))
-            scope = 'public-method' if m.group('scope') == 'public' else 'private-method'
-            ret[scope].append({'name': m.group('method_name'), 'args': m.group('args')})
-        ##r = r'.+public\s+(?P<aaa>.+);$'
-        #r = r'.+(public|private)\s+(?P<aaa>.+);$'
-        #ms = list(re.finditer(r, code, flags=(re.MULTILINE)))
-        #num = len(ms)
-        #if num:
-        #    for idx in range(num):                    
-        #        #print(ms[idx].group("aaa"))
-        #        if idx < num - 1:
-        #            print(code[ms[idx].start():ms[idx+1].start()])
-        #        else:
-        #            print(code[ms[idx].start():])
+            fqcn = m.group('fqcn')
+            if fqcn == class_name:
+                #コンストラクタ
+                nm = fqcn.split('.')[-1]
+                ret['constructor'].append({'name': nm, 'args': m.group('args')})
+            else:
+                #メソッド
+                deco = [val for val in m.group('deco').split(' ') if val]
+                scope = 'private-method' if 'private' in deco else 'public-method'
+                ret[scope].append({'name': fqcn, 'args': m.group('args')})
         return ret
 
     def _getDaoInterfaceMethodref(self, file, map_info):
@@ -191,7 +175,7 @@ class JavaAnalize():
         logging.info('java analize root : %s' % str(classes))
         # クラスの種別（コントローラ、サービス、コンポーネント）を判定
         for path in list(classes.glob('**/*.class')):
-            logging.debug('java decompile source : %s' % str(path))
+            logging.debug('java decompile read : %s' % str(path))
             with path.open(mode='r', encoding='utf-8') as f:
                 buf = f.read()
                 spring_type = self.checkSpringType(buf)
@@ -204,7 +188,7 @@ class JavaAnalize():
                 else:
                     self._project['other'][cn] = java_info
                 java_info['mapper-refs'] = self._getDaoInterfaceMethodref(buf, map_info)
-                java_info['methods'] = self.findMethods(buf)
+                java_info['methods'] = self.findMethods(cn, buf)
 
     def analize(self, map_info):
         self.prepare(map_info)
