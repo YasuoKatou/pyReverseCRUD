@@ -2,6 +2,7 @@
 import datetime
 import json
 import logging
+from os import truncate
 import openpyxl
 import pathlib
 import re
@@ -76,28 +77,72 @@ def formatCrudSheet(sheet, crud_config):
 		col += num * 4
 	return table_list
 
-def formatClassMethods(sheet, crud_config, pinfo):
-	RE_EXCLUDE_CLASS = r'.+(Dto|Entity)$'
+def formatClassMethods(sheet, crud_config, table_list, pinfo):
 	excel_config = crud_config['Excel']
 	start_row = excel_config['start_row']
+	start_column = excel_config['start_column']
 	row = start_row + excel_config['header_rows']
+	exclude_no_mapper_call = excel_config['exclude-no_mapper_call']
+	alignment1 = Alignment(horizontal="center", vertical="center")
+	def setCURD(crud_info):
+		for crud_type, crud_tables in crud_info.items():
+			for table in crud_tables:
+				table = table.lower()
+				if table not in table_list:
+					print('[%s] is not in CRUD list' % table)
+					continue
+				pos = start_column + table_list.index(table) * 4
+				if crud_type == 'create':
+					#pos += 0
+					crud = 'C'
+				elif crud_type == 'read':
+					pos += 1
+					crud = 'R'
+				elif crud_type == 'update':
+					pos += 2
+					crud = 'U'
+				elif crud_type == 'delete':
+					pos += 3
+					crud = 'D'
+				else:
+					assert False, "[%s] is not supported by Excel write process" % crud_type
+				d = sheet.cell(row=row, column=pos, value=crud)
+				d.alignment = alignment1
 	#クラス種別順で出力
 	for class_type in ['controller', 'service', 'component', 'mapper' ,'other']:
 		sheet.cell(row=row, column=1, value=class_type.capitalize())
 		#クラスの出力順をFQCNの昇順で出力
 		cl = sorted(pinfo[class_type].items(), key=lambda x:x[0])
 		for c in cl:
-			if re.match(RE_EXCLUDE_CLASS, c[0]):
-				continue
-			if not c[1]['isClass']:
-				continue
+			if exclude_no_mapper_call:
+				# マッパー参照の有無をクラス単位に確認
+				f = False
+				for method_type in ['constructor', 'public-method', 'private-method']:
+					if f:
+						break
+					for m in c[1]['methods'][method_type]:
+						if m['mapper']:
+							f = True
+							break
+				if not f:
+					continue
+			#クラス名
 			sheet.cell(row=row, column=2, value=c[0])
 			#メソッド種別順で出力
 			for method_type in ['constructor', 'public-method', 'private-method']:
 				#メソッド名の昇順で出力
 				ml = sorted(c[1]['methods'][method_type], key=lambda x:x['name'])
 				for m in ml:
+					mpl = m['mapper']
+					if exclude_no_mapper_call:
+						# マッパー参照の有無をメソッド単位に確認
+						if not mpl:
+							continue
+					#メソッド名
 					sheet.cell(row=row, column=3, value=m['name'])
+					#CRUD
+					for mp in mpl:
+						setCURD(mp['crud'])
 					row += 1
 
 def setColumnWidth(sheet):
@@ -122,8 +167,8 @@ def outExcel(r):
 	sheet = book.worksheets[0]
 
 	sheet.title = 'crud methods'
-	formatCrudSheet(sheet, crud_config)
-	formatClassMethods(sheet, crud_config, r)
+	table_list = formatCrudSheet(sheet, crud_config)
+	formatClassMethods(sheet, crud_config, table_list, r)
 
 	setColumnWidth(sheet)
 

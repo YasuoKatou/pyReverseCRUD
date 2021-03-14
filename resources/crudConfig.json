@@ -61,7 +61,8 @@
         "tables": {
             "master": "マスタ系",
             "transaction":"トラン系"
-        }
+        },
+        "exclude-no_mapper_call": true
     },
     "tables": {
         "master": [

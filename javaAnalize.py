@@ -40,6 +40,8 @@ class JavaAnalize():
             'method-re': re.compile(r'(?P<deco>.*?)(?<!\/\/ Method )(?P<fqcn>[a-zA-Z0-9_\$\.]+)\((?P<args>[^\(\)]*)\).*;$', flags=(re.MULTILINE)),
             'InterfaceMethodref-re': re.compile(r'\s*(?P<ref_no>#\d+)\s*=\s*InterfaceMethodref\s*\S+\s*\/\/\s*(?P<fqcn_method>[^\.]+\.\w+)'),
             'code-block-re': re.compile(r'\{.+\}', flags=(re.DOTALL)),
+            'method-block-re': re.compile(r'.+?\n(\n|\})', flags=(re.DOTALL)),
+            'ref-no': re.compile(r'\d+:\s*invokeinterface\s*(?P<ref_no>#\d+)', flags=(re.MULTILINE)),
         }
         # ワークフォルダを初期化する
         if self._debug['decompile']:
@@ -127,28 +129,42 @@ class JavaAnalize():
             for method_name, v2 in v1['dml'].items():
                 v2['javap'] = '%s.%s' % (fqcn.replace('.', '/'), method_name)
 
-    def findMethods(self, class_name, file):
+    def findMethods(self, class_name, mapper_refs, file):
         m = re.search(self._java_re['code-block-re'], file)
         assert m, 'javaのコードブロックが見つかりません.'
         code = m.group(0)
         #print(code)
         ret = {'constructor':[], 'public-method': [], 'private-method': []}
-        #コンストラクタ／メソッドの判定
-        for m in list(re.finditer(self._java_re['method-re'], code)):
-            #print(str(m.string))
-            fqcn = m.group('fqcn')
-            if fqcn == class_name:
-                #コンストラクタ
-                nm = fqcn.split('.')[-1]
-                ret['constructor'].append({'name': nm, 'args': m.group('args')})
-            else:
-                #メソッド
-                deco = [val for val in m.group('deco').split(' ') if val]
-                scope = 'private-method' if 'private' in deco else 'public-method'
-                ret[scope].append({'name': fqcn, 'args': m.group('args')})
+        for mb in list(re.finditer(self._java_re['method-block-re'], code)):
+            method_code = mb.group(0)
+            #コンストラクタ／メソッドの判定
+            for m in list(re.finditer(self._java_re['method-re'], method_code)):
+                #print(str(m.string))
+                fqcn = m.group('fqcn')
+                if fqcn == class_name:
+                    #コンストラクタ
+                    nm = fqcn.split('.')[-1]
+                    item = {'name': nm, 'args': m.group('args'), 'mapper': []}
+                    ret['constructor'].append(item)
+                else:
+                    #メソッド
+                    deco = [val for val in m.group('deco').split(' ') if val]
+                    scope = 'private-method' if 'private' in deco else 'public-method'
+                    item = {'name': fqcn, 'args': m.group('args'), 'mapper': []}
+                    ret[scope].append(item)
+            #マッパー参照の確認
+            for m in list(re.finditer(self._java_re['ref-no'], method_code)):
+                ref_no = m.group('ref_no')
+                if ref_no in mapper_refs.keys():
+                    mp = mapper_refs[ref_no]
+                    item['mapper'].append(mp)
+                #else:
+                #    logging.error('mapper(%s) not found \n===\n%s\n---\n' % (ref_no, method_code))
+                #    assert False, 'mapper not found'
+                # マッパー以外もあり得るのでここではエラーとできない
         return ret
 
-    def _getDaoInterfaceMethodref(self, file, map_info):
+    def _searchMapperRefs(self, file, map_info):
         '''
         デコンパイルの結果からDao呼び出しの一覧を作成
         '''
@@ -161,7 +177,7 @@ class JavaAnalize():
                     if fqcn_method == v2['javap']:
                         ref_no = m.group('ref_no')
                         #print('%s - %s' % (ref_no, fqcn_method))
-                        ret[ref_no] = fqcn_method
+                        ret[ref_no] = v2
         return ret
 
     def _analize_1(self, map_info):
@@ -187,8 +203,8 @@ class JavaAnalize():
                     self._project[spring_type][cn] = java_info
                 else:
                     self._project['other'][cn] = java_info
-                java_info['mapper-refs'] = self._getDaoInterfaceMethodref(buf, map_info)
-                java_info['methods'] = self.findMethods(cn, buf)
+                mapper_refs = self._searchMapperRefs(buf, map_info)
+                java_info['methods'] = self.findMethods(cn, mapper_refs, buf)
 
     def analize(self, map_info):
         self.prepare(map_info)
