@@ -4,11 +4,14 @@ JavaソースとMyBatisのMapperXMLからCRUDを作成する
 ## リバースエンジニアリングツール
 * 解析結果は、Excelに出力する
 * 出力タイプは、次の３種類用意する
-    * クラス単位
+    * メソッド単位（完成）
+    * javaソース単位（着手）
     * サービス単位
     * コントローラ単位 
 
 ## モジュール一覧
+* javaAnalize  
+    javaのclassファイルをデコンパイルし、crudをExcelファイルに出力する
 
 * daoReader  
     MyBatisのマッパーファイル（XML）形式を読込み、各クエリーのCRUDの判定の準備を行う
@@ -25,9 +28,12 @@ JavaソースとMyBatisのMapperXMLからCRUDを作成する
   同Mapperファイル内の sql タグを展開する
 
 ## 開発メモ  
+* 【製造】デコンパイル結果からjavaのソースファイル単位でcrudを作成
 * 【製造】Javaのソースファイルから使用しているDaoを紐づける  
+　　* 完成。デコンパイル後のファイルを解析
 * 【製造】メソッドのつながり
-* 【製造】CRUD の Excel 出力
+* 【製造】CRUD の Excel 出力  
+　　* 完成。[openpyxl]を利用
 * 【テスト】サンプルのMapperファイルの拡充  
 
 ### メソッドのつながり  

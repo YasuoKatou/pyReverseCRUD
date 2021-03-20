@@ -7,8 +7,6 @@ import shutil
 import subprocess
 import sys
 
-from daoReader import DaoReader
-
 class JavaAnalize():
     def __init__(self):
         # 定義情報の読込み
@@ -16,6 +14,7 @@ class JavaAnalize():
         json_path = myPath.parent / 'resources' / 'crudConfig.json'
         with json_path.open(mode='r', encoding='UTF8') as f:
             config = json.load(f)
+        self._tables = config['tables']
         analize = config['analize']
         self._debug = analize['debug']
         self._jdkPath = analize['jdk-path']
@@ -53,6 +52,18 @@ class JavaAnalize():
 
     def getMapperXMLPath(self):
         return self._mapperXMLPath
+
+    def getTablesRE(self):
+        r = {}
+        for list in self._tables.values():
+            for tables in list:
+                for t in tables.keys():
+                    tn = t.lower()
+                    if tn not in r.keys():
+                        r[tn] = re.compile(r'[^\w]%s[^\w\.]' % t, flags=(re.MULTILINE | re.IGNORECASE))
+                    else:
+                        logging.info('%s is duplicated' % tn)
+        return r
 
     def command(self, cmd):
         try:
@@ -233,14 +244,16 @@ class JavaAnalize():
 if __name__ == '__main__':
     from outExcel import outExcel
     from outExcel import outMapperInfo
+    from daoReader import DaoReader
 
     log_format = '%(levelname)s : %(asctime)s : %(message)s'
-    logging.basicConfig(level=logging.DEBUG, format=log_format)
-    #logging.basicConfig(level=logging.INFO, format=log_format)
+    #logging.basicConfig(level=logging.DEBUG, format=log_format)
+    logging.basicConfig(level=logging.INFO, format=log_format)
 
     ana = JavaAnalize()
     dao = DaoReader(ana.getMapperXMLPath())
-    map_info = dao.readXmls()
+    tableRE = ana.getTablesRE()
+    map_info = dao.readXmls(tableRE=tableRE)
     if ana._debug['mapper-excel']:
         outMapperInfo(map_info)
     ana.analize(map_info)

@@ -8,6 +8,8 @@ import xml.etree.ElementTree as ET
 from crudJudgment import judgment
 
 class DaoReader():
+    _CR01 = re.compile(r'--.*$', flags=(re.MULTILINE))
+
     def __init__(self, resourceRoot = None):
         self.resourceRoot = resourceRoot
 
@@ -21,20 +23,6 @@ class DaoReader():
             r['package'] = ''
         return r
 
-    def removeCRFL(self, source):
-        def removeComment(_line):
-            _w = _line.split('--', 1)
-            return _w[0].strip()
-            
-        r = []
-        for line in re.split(r'[\n\r]', source):
-            wk = line.strip()
-            if wk:
-                wk = removeComment(wk)
-                if wk:
-                    r.append(wk + '\n')
-        return r
-
     def expandDml(self, dmlType, xml, sqlIncludes):
         r = {'type': dmlType}
         wk = ''
@@ -45,10 +33,10 @@ class DaoReader():
                 wk += v.text
             if v.tail:
                 wk += v.tail
-        r['query'] = self.removeCRFL(wk)
+        r['query'] = re.sub(self._CR01, r'', wk)
         return r
 
-    def readXmls(self, xmlRoot = None):
+    def readXmls(self, xmlRoot = None, tableRE = []):
         if not xmlRoot:
             xmlRoot = pathlib.Path(self.resourceRoot)
         logging.info('Mapper xml root : %s' % str(xmlRoot))
@@ -74,22 +62,9 @@ class DaoReader():
                 tagName = child.tag.lower()
                 if tagName in ('select', 'insert', 'update', 'delete'):
                   r['dml'][child.attrib['id']] = self.expandDml(tagName, child, sqlIncludes)
-            judgment(r)
+            judgment(r, tableRE)
         return rr
 
-if __name__ == '__main__':
-    import sys
-
-    xmlRoot = ''
-    argvs = sys.argv
-    if len(argvs) > 1:
-        xmlRoot = pathlib.Path(argvs[1])
-    else:
-        myPath = pathlib.Path(__file__)
-        xmlRoot = myPath.parent
-
-    reader = DaoReader()
-    reader.readXmls(xmlRoot = xmlRoot / 'resources' / 'sources')
     '''
     {
       FQCN_1 (= tag:mapper attribute:namespace): {

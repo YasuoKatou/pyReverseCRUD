@@ -2,10 +2,28 @@
     "analize": {
         "debug": {
             "decompile": false,
-            "mapper-excel": false
+            "mapper-excel": true
         },
         "jdk-path": "Z:\\Oracle\\Java\\jdk-15.0.2\\bin",
         "javap-options": "-c -v -p -l",
+        "project-case-01": {
+            "work-path": "Z:\\workspace\\GitHub\\pyReverseCRUD\\resources\\projects\\sample002",
+            "Project": {
+                "path": "Z:\\workspace\\java\\sample002",
+                "java-src": "\\src\\main\\java",
+                "classes": "\\target\\classes",
+                "mapper-xml": "\\src\\main\\resources\\dao"
+            }
+        },
+        "project-case-02": {
+            "work-path": "Z:\\workspace\\GitHub\\pyReverseCRUD\\resources\\projects\\junit-4.11",
+            "Project": {
+                "path": "Z:\\workspace\\java\\java_source_analize\\junit-4.11",
+                "java-src": "\\sources",
+                "classes": "\\classes",
+                "mapper-xml": "\\classes"
+            }
+        },
         "work-path": "Z:\\workspace\\GitHub\\pyReverseCRUD\\resources\\projects\\sample002",
         "Project": {
             "path": "Z:\\workspace\\java\\sample002",
@@ -62,7 +80,7 @@
             "master": "マスタ系",
             "transaction":"トラン系"
         },
-        "exclude-no_mapper_call": true
+        "exclude-no_mapper_call": false
     },
     "tables": {
         "master": [

@@ -10,11 +10,11 @@ class TestStringMethods(unittest.TestCase):
 	_RS01 = r".+(?<!delete)\s+from\s+(?P<table_name>\w+).?"
 	_RS02 = r".+\s+join\s+(?P<join_name>\w+).?"
 
-	_RI01 = r".?insert\s+into\s+(?P<table_name>\w+).?"
+	_RI01 = re.compile(r"insert\s+into\s+(?P<table_name>\w+)", flags=(re.MULTILINE | re.IGNORECASE))
 
-	_RU01 = r".?update\s+(?P<table_name>\w+).?"
+	_RU01 = re.compile(r"update\s+(?P<table_name>\w+)", flags=(re.MULTILINE | re.IGNORECASE))
 
-	_RD01 = r".?(?<=delete)\s+from\s+(?P<table_name>\w+).?"
+	_RD01 = re.compile(r"delete\s+from\s+(?P<table_name>\w+)", flags=(re.MULTILINE | re.IGNORECASE))
 
 	def select_from_table(self, query):
 		'''
@@ -30,26 +30,11 @@ class TestStringMethods(unittest.TestCase):
 		f = (re.MULTILINE | re.IGNORECASE)
 		return list(re.finditer(self._RS02, query, flags=f))
 
-	def insert_table(self, query):
-		'''
-		Insert するテーブル名を取得する
-		'''
-		f = (re.MULTILINE | re.IGNORECASE)
-		return re.search(self._RI01, query, flags=f)
-
-	def update_table(self, query):
-		'''
-		Update するテーブル名を取得する
-		'''
-		f = (re.MULTILINE | re.IGNORECASE)
-		return re.search(self._RU01, query, flags=f)
-
 	def delete_table(self, query):
 		'''
 		delete するテーブル名を取得する
 		'''
-		f = (re.MULTILINE | re.IGNORECASE)
-		return re.search(self._RD01, query, flags=f)
+		return re.search(self._RD01, query)
 
 	@classmethod
 	def tearDownClass(cls):
@@ -139,31 +124,40 @@ class TestStringMethods(unittest.TestCase):
 		mm = sys._getframe().f_code.co_name
 		q = "  INSERT  into  products (did, dname) VALUES (1, 'Cheese');"
 		# insert を確認
-		m = self.insert_table(q)
+		m = re.search(self._RI01, q)
 		self.assertIsNotNone(m, "%s : none insert table !?" % mm)
 		tn = m.group("table_name")
 		verbose_list.append("%s : insert [%s]" % (mm, tn))
 		self.assertEqual(tn, "products", "%s : table name ?" % mm)
+		# キーワードを削除した結果を確認(キーワード「INSERT」の前の文字も置換後に含まれるのに注意)
+		m = re.sub(self._RI01, '', q)
+		self.assertEqual(m, "   (did, dname) VALUES (1, 'Cheese');")
 
 	def test_update_01(self):
 		mm = sys._getframe().f_code.co_name
 		q = "  UPDATE films SET kind = 'Dramatic' WHERE kind = 'Drama';"
 		# update を確認
-		m = self.update_table(q)
+		m = re.search(self._RU01, q)
 		self.assertIsNotNone(m, "%s : none update table !?" % mm)
 		tn = m.group("table_name")
 		verbose_list.append("%s : update [%s]" % (mm, tn))
 		self.assertEqual(tn, "films", "%s : table name ?" % mm)
+		# キーワードを削除した結果を確認(キーワード「update」の前の文字も置換後に含まれるのに注意)
+		m = re.sub(self._RU01, '', q)
+		self.assertEqual(m, "   SET kind = 'Dramatic' WHERE kind = 'Drama';")
 
 	def test_delete_01(self):
 		mm = sys._getframe().f_code.co_name
 		q = "  DELETE FROM Staff WHERE id='0002';"
 		# delete を確認
-		m = self.delete_table(q)
+		m = re.search(self._RD01, q)
 		self.assertIsNotNone(m, "%s : none delete table !?" % mm)
 		tn = m.group("table_name")
 		verbose_list.append("%s : delete [%s]" % (mm, tn))
 		self.assertEqual(tn, "Staff", "%s : table name ?" % mm)
+		# キーワードを削除した結果を確認(キーワード「update」の前の文字も置換後に含まれるのに注意)
+		m = re.sub(self._RD01, '', q)
+		self.assertEqual(m, "   WHERE id='0002';")
 
 if __name__ == '__main__':
 	unittest.main()
