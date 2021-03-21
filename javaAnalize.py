@@ -33,6 +33,7 @@ class JavaAnalize():
             "other": {},         # else
         }
         self._java_re = {
+            'java-source-re': re.compile(r'Compiled\s+from\s+"(?P<source_file>\w+)\.java"', flags=(re.MULTILINE)),
             'class-re': re.compile(r'^(public|private)?\s*(final\s+)?(abstract\s+)?class\s+(?P<fqcn>\S+)', flags=(re.MULTILINE)),
             'interface-re': re.compile(r'^(public|private)?\s*interface\s+(?P<fqcn>\S+)', flags=(re.MULTILINE)),
             'implements-re': re.compile(r'public\s+class\s+\S+\s+implements\s+(?P<impl>\S+)', flags=(re.MULTILINE)),
@@ -130,7 +131,13 @@ class JavaAnalize():
         if m:
             impl = m.group('impl')
 
-        return fqcn, impl, isClass
+        # javaソースファイル
+        source_file = None
+        m = re.search(self._java_re['java-source-re'], file)
+        if m:
+            source_file = m.group('source_file')
+
+        return fqcn, impl, isClass, source_file
 
     def prepare(self, map_info):
         '''
@@ -206,10 +213,13 @@ class JavaAnalize():
             with path.open(mode='r', encoding='utf-8') as f:
                 buf = f.read()
                 spring_type = self.checkSpringType(buf)
-                cn, impl, isClass = self.getClass(buf)
+                cn, impl, isClass, source_name = self.getClass(buf)
                 assert cn, 'no class/interface [%s]' % str(path)
                 #print('%s(implements %s) is %s' % (cn, impl, spring_type))
-                java_info = {'decompile_path': path, 'implements': impl, "isClass": isClass}
+                wk = cn.split('.')
+                p = '' if len(wk) == 1 else '.'.join([wk[i] for i in range(0, len(wk)-1)])
+                java_info = {'source_path': '%s.%s.java' % (p, source_name)
+                    ,'decompile_path': path, 'implements': impl, "isClass": isClass}
                 if spring_type:
                     self._project[spring_type][cn] = java_info
                 else:
@@ -224,6 +234,7 @@ class JavaAnalize():
         self._project = {
           "controller": {    -- コントローラクラス一覧
             FQCN_1: {
+              "source_path": (path)
               "decompile_path": (full path),
               "implements": (= interface FQCN),
               "methods": (*1)

@@ -72,6 +72,34 @@ S03 = '''\
         11: invokevirtual #12                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
 '''
 
+#
+# S04_1：javapでデコンパイルした結果からクラス名、パッケージ名およびソースファイル名を取得
+#
+S04_1 = '''\
+Classfile /Z:/junit-4.11/classes/extensions/ActiveTestSuite.class
+  Last modified 2012/11/14; size 2071 bytes
+  SHA-256 checksum 5aaec6e709e96f38fbe6b539d348ceef4ac88c0ec442120afb88905bd6db31b2
+  Compiled from "ActiveTestSuite.java"
+public class junit.extensions.ActiveTestSuite extends junit.framework.TestSuite
+  minor version: 0
+  major version: 49
+  flags: (0x0021) ACC_PUBLIC, ACC_SUPER
+'''
+
+#
+# S04_2：javapでデコンパイルした結果からクラス名、パッケージ名およびソースファイル名を取得
+#
+S04_2 = '''\
+Classfile /Z:/junit-4.11/classes/extensions/ActiveTestSuite$1.class
+  Last modified 2012/11/14; size 986 bytes
+  SHA-256 checksum 4cb7cea76a72075cfae9ff71cb6f38b1844b6926163da3cc71fd003f0c875243
+  Compiled from "ActiveTestSuite.java"
+class junit.extensions.ActiveTestSuite$1 extends java.lang.Thread
+  minor version: 0
+  major version: 49
+  flags: (0x0020) ACC_SUPER
+'''
+
 class TestCheck20210312(unittest.TestCase):
 	# コード部分を抽出する正規表現
 	code_block_re = re.compile(r'\{.+\}', flags=(re.DOTALL))
@@ -79,6 +107,11 @@ class TestCheck20210312(unittest.TestCase):
 	method_block_re = re.compile(r'.+?\n(\n|\})', flags=(re.DOTALL))
 	# コンストラクタ及びメソッドを抽出する正規表現
 	method_re = re.compile(r'(?P<deco>.*?)(?<!\/\/ Method )(?P<fqcn>[a-zA-Z0-9_\$\.]+)\((?P<args>[^\(\)]*)\).*;$', flags=(re.MULTILINE))
+
+	# クラス名を抽出する正規表現
+	class_re = re.compile(r'^(public|private)?\s*(final\s+)?(abstract\s+)?class\s+(?P<fqcn>\S+)', flags=(re.MULTILINE))
+	# ソースファイルを抽出する正規表現
+	java_source_re = re.compile(r'Compiled\s+from\s+"(?P<source_file>\w+)\.java"', flags=(re.MULTILINE))
 
 	'''
 	javapでdecompileした解析に使用する正規表現パターンを検証する
@@ -232,6 +265,26 @@ class TestCheck20210312(unittest.TestCase):
 		self.assertEqual(len(deco_ex), len(deco), 'constructor #%d has decorations' % n)
 		self.assertEqual(deco[0], deco_ex[0], 'constructor #%d 1st decoration error' % n)
 		self.assertEqual(deco[1], deco_ex[1], 'constructor #%d 2nd decoration error' % n)
+
+	def test_class_001(self):
+		# FQCN の確認
+		m = re.search(self.class_re, S04_1)
+		self.assertIsNotNone(m, 'none class')
+		self.assertEqual(m.group('fqcn'), 'junit.extensions.ActiveTestSuite', 'FQCN error')
+		# ソースファイル名の確認
+		m = re.search(self.java_source_re, S04_1)
+		self.assertIsNotNone(m, 'none source file name')
+		self.assertEqual(m.group('source_file'), 'ActiveTestSuite', 'FQCN error')
+
+	def test_class_002(self):
+		# FQCN の確認
+		m = re.search(self.class_re, S04_2)
+		self.assertIsNotNone(m, 'none class')
+		self.assertEqual(m.group('fqcn'), 'junit.extensions.ActiveTestSuite$1', 'FQCN error')
+		# ソースファイル名の確認
+		m = re.search(self.java_source_re, S04_1)
+		self.assertIsNotNone(m, 'none source file name')
+		self.assertEqual(m.group('source_file'), 'ActiveTestSuite', 'FQCN error')
 
 if __name__ == '__main__':
 	unittest.main()
