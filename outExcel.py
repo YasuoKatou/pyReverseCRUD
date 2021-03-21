@@ -146,6 +146,55 @@ def formatClassMethods(sheet, crud_config, table_list, pinfo):
 						_setCURD(sheet, row, start_column, alignment1, table_list, mp['crud'])
 					row += 1
 
+def formatJavaSource(sheet, crud_config, table_list, pinfo):
+	excel_config = crud_config['Excel']
+	start_row = excel_config['start_row']
+	start_column = excel_config['start_column']
+	row = start_row + excel_config['header_rows']
+	exclude_no_mapper_call = excel_config['exclude-no_mapper_call']
+	alignment1 = Alignment(horizontal="center", vertical="center")
+	prev_java_file = ''
+	#クラス種別順で出力
+	for class_type in ['controller', 'service', 'component', 'mapper' ,'other']:
+		sheet.cell(row=row, column=1, value=class_type.capitalize())
+		#クラスの出力順をFQCNの昇順で出力
+		cl = sorted(pinfo[class_type].items(), key=lambda x:x[1]['source_path'])
+		for c in cl:
+			if exclude_no_mapper_call:
+				# マッパー参照の有無をクラス単位に確認
+				f = False
+				for method_type in ['constructor', 'public-method', 'private-method']:
+					if f:
+						break
+					for m in c[1]['methods'][method_type]:
+						if m['mapper']:
+							f = True
+							break
+				if not f:
+					continue
+			#ソースファイル名
+			java_file = c[1]['source_path']
+			sheet.cell(row=row, column=2, value=java_file)
+			#メソッド種別順で出力
+			for method_type in ['constructor', 'public-method', 'private-method']:
+				#メソッド名の昇順で出力
+				ml = sorted(c[1]['methods'][method_type], key=lambda x:x['name'])
+				for m in ml:
+					mpl = m['mapper']
+					if exclude_no_mapper_call:
+						# マッパー参照の有無をメソッド単位に確認
+						if not mpl:
+							continue
+					#メソッド名
+					#sheet.cell(row=row, column=3, value=m['name'])
+					#CRUD
+					for mp in mpl:
+						_setCURD(sheet, row, start_column, alignment1, table_list, mp['crud'])
+
+			if java_file != prev_java_file:
+				row += 1
+				prev_java_file = java_file
+
 def setColumnWidth(sheet):
 	def _setColumnWidth(col_no):
 		max_width = 0
@@ -160,18 +209,28 @@ def setColumnWidth(sheet):
 	_setColumnWidth(2)	  #FQCN
 	_setColumnWidth(3)	  #メソッド
 
-def outExcel(r):
-	crud_config = getCrudConfig()
-	#print(crud_config)
-
-	book = openpyxl.Workbook()
-	sheet = book.worksheets[0]
-
-	sheet.title = 'crud methods'
+def outExcel_method(crud_config, sheet, r):
 	table_list = formatCrudSheet(sheet, crud_config)
 	formatClassMethods(sheet, crud_config, table_list, r)
 
 	setColumnWidth(sheet)
+
+def outExcel_java(crud_config, sheet, r):
+	table_list = formatCrudSheet(sheet, crud_config)
+	formatJavaSource(sheet, crud_config, table_list, r)
+
+	setColumnWidth(sheet)
+
+def outExcel(r):
+	crud_config = getCrudConfig()
+	#print(crud_config)
+	book = openpyxl.Workbook()
+	# メソッド単位のCRUDを編集
+	sheet = book.worksheets[0]
+	sheet.title = 'crud methods'
+	outExcel_method(crud_config, sheet, r)
+	sheet =  book.create_sheet('crud java source', 0)
+	outExcel_java(crud_config, sheet, r)
 
 	book.save(getExcelBookPath(prefix='crud'))
 	book.close()

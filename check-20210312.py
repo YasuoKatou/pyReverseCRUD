@@ -100,6 +100,20 @@ class junit.extensions.ActiveTestSuite$1 extends java.lang.Thread
   flags: (0x0020) ACC_SUPER
 '''
 
+#
+# S04_3：javapでデコンパイルした結果からクラス名、パッケージ名およびソースファイル名を取得
+#
+S04_3 = '''\
+Classfile /Z:/workspace/java/java_source_analize/junit-4.11/classes/extensions/package-info.class
+  Last modified 2012/11/14; size 122 bytes
+  SHA-256 checksum 68199e5c4ec5c531c0567593f72352327c017154d53d7be7940f901953c81140
+  Compiled from "package-info.java"
+interface junit.extensions.package-info
+  minor version: 0
+  major version: 49
+  flags: (0x0200) ACC_INTERFACE
+'''
+
 class TestCheck20210312(unittest.TestCase):
 	# コード部分を抽出する正規表現
 	code_block_re = re.compile(r'\{.+\}', flags=(re.DOTALL))
@@ -110,8 +124,10 @@ class TestCheck20210312(unittest.TestCase):
 
 	# クラス名を抽出する正規表現
 	class_re = re.compile(r'^(public|private)?\s*(final\s+)?(abstract\s+)?class\s+(?P<fqcn>\S+)', flags=(re.MULTILINE))
+	# インターフェース名を抽出する正規表現
+	interface_re = re.compile(r'^(public|private)?\s*interface\s+(?P<fqcn>\S+)', flags=(re.MULTILINE))
 	# ソースファイルを抽出する正規表現
-	java_source_re = re.compile(r'Compiled\s+from\s+"(?P<source_file>\w+)\.java"', flags=(re.MULTILINE))
+	java_source_re = re.compile(r'Compiled\s+from\s+"(?P<source_file>\S+)\.java"', flags=(re.MULTILINE))
 
 	'''
 	javapでdecompileした解析に使用する正規表現パターンを検証する
@@ -282,9 +298,19 @@ class TestCheck20210312(unittest.TestCase):
 		self.assertIsNotNone(m, 'none class')
 		self.assertEqual(m.group('fqcn'), 'junit.extensions.ActiveTestSuite$1', 'FQCN error')
 		# ソースファイル名の確認
-		m = re.search(self.java_source_re, S04_1)
+		m = re.search(self.java_source_re, S04_2)
 		self.assertIsNotNone(m, 'none source file name')
 		self.assertEqual(m.group('source_file'), 'ActiveTestSuite', 'FQCN error')
+
+	def test_class_003(self):
+		# FQCN の確認
+		m = re.search(self.interface_re, S04_3)
+		self.assertIsNotNone(m, 'none class')
+		self.assertEqual(m.group('fqcn'), 'junit.extensions.package-info', 'FQCN error')
+		# ソースファイル名の確認
+		m = re.search(self.java_source_re, S04_3)
+		self.assertIsNotNone(m, 'none source file name')
+		self.assertEqual(m.group('source_file'), 'package-info', 'FQCN error')
 
 if __name__ == '__main__':
 	unittest.main()

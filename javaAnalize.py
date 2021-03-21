@@ -33,7 +33,7 @@ class JavaAnalize():
             "other": {},         # else
         }
         self._java_re = {
-            'java-source-re': re.compile(r'Compiled\s+from\s+"(?P<source_file>\w+)\.java"', flags=(re.MULTILINE)),
+            'java-source-re': re.compile(r'Compiled\s+from\s+"(?P<source_file>\S+)\.java"', flags=(re.MULTILINE)),
             'class-re': re.compile(r'^(public|private)?\s*(final\s+)?(abstract\s+)?class\s+(?P<fqcn>\S+)', flags=(re.MULTILINE)),
             'interface-re': re.compile(r'^(public|private)?\s*interface\s+(?P<fqcn>\S+)', flags=(re.MULTILINE)),
             'implements-re': re.compile(r'public\s+class\s+\S+\s+implements\s+(?P<impl>\S+)', flags=(re.MULTILINE)),
