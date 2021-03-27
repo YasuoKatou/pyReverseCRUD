@@ -2,6 +2,7 @@ import re
 import sys
 import unittest
 
+from Constants import DML_REs
 
 verbose_list = []
 
@@ -9,12 +10,6 @@ class SqlTypeTest(unittest.TestCase):
 
 	_RS01 = r".+(?<!delete)\s+from\s+(?P<table_name>\w+).?"
 	_RS02 = r".+\s+join\s+(?P<join_name>\w+).?"
-
-	_RI01 = re.compile(r"insert\s+into\s+(?P<table_name>\w+)", flags=(re.MULTILINE | re.IGNORECASE))
-
-	_RU01 = re.compile(r"update\s+(?P<table_name>\w+)", flags=(re.MULTILINE | re.IGNORECASE))
-
-	_RD01 = re.compile(r"delete\s+from\s+(?P<table_name>\w+)", flags=(re.MULTILINE | re.IGNORECASE))
 
 	def select_from_table(self, query):
 		'''
@@ -124,39 +119,39 @@ class SqlTypeTest(unittest.TestCase):
 		mm = sys._getframe().f_code.co_name
 		q = "  INSERT  into  products (did, dname) VALUES (1, 'Cheese');"
 		# insert を確認
-		m = re.search(self._RI01, q)
+		m = re.search(DML_REs['insert'], q)
 		self.assertIsNotNone(m, "%s : none insert table !?" % mm)
 		tn = m.group("table_name")
 		verbose_list.append("%s : insert [%s]" % (mm, tn))
 		self.assertEqual(tn, "products", "%s : table name ?" % mm)
 		# キーワードを削除した結果を確認(キーワード「INSERT」の前の文字も置換後に含まれるのに注意)
-		m = re.sub(self._RI01, '', q)
+		m = re.sub(DML_REs['insert'], '', q)
 		self.assertEqual(m, "   (did, dname) VALUES (1, 'Cheese');")
 
 	def test_update_01(self):
 		mm = sys._getframe().f_code.co_name
 		q = "  UPDATE films SET kind = 'Dramatic' WHERE kind = 'Drama';"
 		# update を確認
-		m = re.search(self._RU01, q)
+		m = re.search(DML_REs['update'], q)
 		self.assertIsNotNone(m, "%s : none update table !?" % mm)
 		tn = m.group("table_name")
 		verbose_list.append("%s : update [%s]" % (mm, tn))
 		self.assertEqual(tn, "films", "%s : table name ?" % mm)
 		# キーワードを削除した結果を確認(キーワード「update」の前の文字も置換後に含まれるのに注意)
-		m = re.sub(self._RU01, '', q)
+		m = re.sub(DML_REs['update'], '', q)
 		self.assertEqual(m, "   SET kind = 'Dramatic' WHERE kind = 'Drama';")
 
 	def test_delete_01(self):
 		mm = sys._getframe().f_code.co_name
 		q = "  DELETE FROM Staff WHERE id='0002';"
 		# delete を確認
-		m = re.search(self._RD01, q)
+		m = re.search(DML_REs['delete'], q)
 		self.assertIsNotNone(m, "%s : none delete table !?" % mm)
 		tn = m.group("table_name")
 		verbose_list.append("%s : delete [%s]" % (mm, tn))
 		self.assertEqual(tn, "Staff", "%s : table name ?" % mm)
 		# キーワードを削除した結果を確認(キーワード「update」の前の文字も置換後に含まれるのに注意)
-		m = re.sub(self._RD01, '', q)
+		m = re.sub(DML_REs['delete'], '', q)
 		self.assertEqual(m, "   WHERE id='0002';")
 
 if __name__ == '__main__':

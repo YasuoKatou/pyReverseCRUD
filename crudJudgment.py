@@ -2,44 +2,40 @@
 import re
 import logging
 
-_RI01 = re.compile(r"insert\s+into\s+(?P<table_name>\w+)", flags=(re.MULTILINE | re.IGNORECASE))
-
-_RU01 = re.compile(r"update\s+(?P<table_name>\w+)", flags=(re.MULTILINE | re.IGNORECASE))
-
-_RD01 = re.compile(r"delete\s+from\s+(?P<table_name>\w+)", flags=(re.MULTILINE | re.IGNORECASE))
+from Constants import DML_REs
 
 def insert_table(query, crud):
 	'''
 	Insert するテーブル名を取得する
 	'''
-	m = re.search(_RI01, query)
+	m = re.search(DML_REs['insert'], query)
 	assert m, 'not found insert table name\n----------------\n%s\n----------------' & query
 	tn = m.group("table_name").lower()
 	if not tn in crud['create']:
 		crud['create'].append(tn)
-	return tn, re.sub(_RI01, '', query)
+	return tn, re.sub(DML_REs['insert'], '', query)
 
 def update_table(query, crud):
 	'''
 	Update するテーブル名を取得する
 	'''
-	m = re.search(_RU01, query)
+	m = re.search(DML_REs['update'], query)
 	assert m, 'not found update table name\n----------------\n%s\n----------------' & query
 	tn = m.group("table_name").lower()
 	if not tn in crud['update']:
 		crud['update'].append(tn)
-	return tn, re.sub(_RU01, '', query)
+	return tn, re.sub(DML_REs['update'], '', query)
 
 def delete_table(query, crud):
 	'''
 	delete するテーブル名を取得する
 	'''
-	m = re.search(_RD01, query)
+	m = re.search(DML_REs['delete'], query)
 	assert m, 'not found update table name\n----------------\n%s\n----------------' & query
 	tn = m.group("table_name").lower()
 	if not tn in crud['delete']:
 		crud['delete'].append(tn)
-	return tn, re.sub(_RD01, '', query)
+	return tn, re.sub(DML_REs['delete'], '', query)
 
 def findReferencedTable(query, crud, tableRE):
 	for tn, searchRE in tableRE.items():

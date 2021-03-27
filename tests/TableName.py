@@ -1,12 +1,12 @@
 import re
 import unittest
 
+from Constants import DDL_REs, SQL_REs
+
 # ======================================
 # テーブル名を検索する（テーブル名例：zzz）
 #
 _QR01 = re.compile(r'[^\w]zzz[^\w\.]', flags=(re.MULTILINE | re.IGNORECASE))
-#_QR01 = re.compile(r'(?<!--)\.*[^\w]zzz[^\w\.]', flags=(re.MULTILINE | re.IGNORECASE))
-
 _QH01 = r'''\
 	-- 「Zzz」でヒットする
    select *
@@ -63,8 +63,6 @@ where ...
 # ======================================
 # 行コメントを検索する
 #
-_CR01 = re.compile(r'--.*$', flags=(re.MULTILINE))
-
 _CH01b = r'''\
 -- hoge
  --123
@@ -87,6 +85,25 @@ _CH01a = r'''\
 	b_date
   from table 
   where id = #{id}
+'''
+
+# ======================================
+# CREATE VIEW を検索する
+#
+_QVS01 = r'''\
+   create view view01 (
+	   column_name1
+	  ,column_name2) as
+	  select ....
+'''
+
+_QVS02 = r'''\
+   create  or  replace temp  RECURSIVE
+   view
+   view02 (
+	   column_name1
+	  ,column_name2) as
+	  select ....
 '''
 
 class TableNameTest(unittest.TestCase):
@@ -124,8 +141,18 @@ class TableNameTest(unittest.TestCase):
 	#	self.assertIsNone(rs)
 
 	def test_C01(self):
-		rs = re.sub(_CR01, r'', _CH01b)
+		rs = re.sub(SQL_REs['comment1'], r'', _CH01b)
 		self.assertEqual(rs, _CH01a)
+
+	def test_V01(self):
+		rs = re.search(DDL_REs['create-view'], _QVS01)
+		self.assertIsNotNone(rs)
+		self.assertEqual(rs.group('view_name'), 'view01', 'view name error')
+
+	def test_V02(self):
+		rs = re.search(DDL_REs['create-view'], _QVS02)
+		self.assertIsNotNone(rs)
+		self.assertEqual(rs.group('view_name'), 'view02', 'view name error')
 
 if __name__ == '__main__':
 	unittest.main()

@@ -1,6 +1,8 @@
 import re
 import unittest
 
+from Constants import JAVAP_REs
+
 #
 # S01：javapでデコンパイルした結果から「コード」ブロック及び「コンストラクタ／メソッド」ブロック抽出確認に使用するデータ
 #
@@ -115,20 +117,6 @@ interface junit.extensions.package-info
 '''
 
 class JavapDecompileTest(unittest.TestCase):
-	# コード部分を抽出する正規表現
-	code_block_re = re.compile(r'\{.+\}', flags=(re.DOTALL))
-	# １メソッドを抽出する正規表現
-	method_block_re = re.compile(r'.+?\n(\n|\})', flags=(re.DOTALL))
-	# コンストラクタ及びメソッドを抽出する正規表現
-	method_re = re.compile(r'(?P<deco>.*?)(?<!\/\/ Method )(?P<fqcn>[a-zA-Z0-9_\$\.]+)\((?P<args>[^\(\)]*)\).*;$', flags=(re.MULTILINE))
-
-	# クラス名を抽出する正規表現
-	class_re = re.compile(r'^(public|private)?\s*(final\s+)?(abstract\s+)?class\s+(?P<fqcn>\S+)', flags=(re.MULTILINE))
-	# インターフェース名を抽出する正規表現
-	interface_re = re.compile(r'^(public|private)?\s*interface\s+(?P<fqcn>\S+)', flags=(re.MULTILINE))
-	# ソースファイルを抽出する正規表現
-	java_source_re = re.compile(r'Compiled\s+from\s+"(?P<source_file>\S+)\.java"', flags=(re.MULTILINE))
-
 	'''
 	javapでdecompileした解析に使用する正規表現パターンを検証する
 	'''
@@ -136,7 +124,7 @@ class JavapDecompileTest(unittest.TestCase):
 		'''
 		コード部の抽出を確認する
 		'''
-		m = re.search(self.code_block_re, S01)
+		m = re.search(JAVAP_REs['code-block'], S01)
 
 		self.assertIsNotNone(m, 'not found code block')
 		s = m.group(0)
@@ -147,8 +135,8 @@ class JavapDecompileTest(unittest.TestCase):
 		'''
 		メソッドブロックの抽出を確認する
 		'''
-		m1 = re.search(self.code_block_re, S01)
-		m2 = re.finditer(self.method_block_re, m1.group(0))
+		m1 = re.search(JAVAP_REs['code-block'], S01)
+		m2 = re.finditer(JAVAP_REs['method-block'], m1.group(0))
 		self.assertIsNotNone(m2, 'not method code block')
 		ml = list(m2)
 		# メソッドブロック数を確認
@@ -187,7 +175,7 @@ class JavapDecompileTest(unittest.TestCase):
 		'''
 		コンストラクタの抽出を確認する
 		'''
-		m1 = re.finditer(self.method_re, S02)
+		m1 = re.finditer(JAVAP_REs['method'], S02)
 		self.assertIsNotNone(m1, 'none constructor')
 		m2 = list(m1)
 		self.assertEqual(len(m2), 3, 'constructors not match')
@@ -228,7 +216,7 @@ class JavapDecompileTest(unittest.TestCase):
 		'''
 		メソッドの抽出を確認する
 		'''
-		m1 = re.finditer(self.method_re, S03)
+		m1 = re.finditer(JAVAP_REs['method'], S03)
 		self.assertIsNotNone(m1, 'none method')
 		m2 = list(m1)
 		self.assertEqual(len(m2), 4, 'methods not match')
@@ -284,31 +272,31 @@ class JavapDecompileTest(unittest.TestCase):
 
 	def test_class_001(self):
 		# FQCN の確認
-		m = re.search(self.class_re, S04_1)
+		m = re.search(JAVAP_REs['class'], S04_1)
 		self.assertIsNotNone(m, 'none class')
 		self.assertEqual(m.group('fqcn'), 'junit.extensions.ActiveTestSuite', 'FQCN error')
 		# ソースファイル名の確認
-		m = re.search(self.java_source_re, S04_1)
+		m = re.search(JAVAP_REs['java-source'], S04_1)
 		self.assertIsNotNone(m, 'none source file name')
 		self.assertEqual(m.group('source_file'), 'ActiveTestSuite', 'FQCN error')
 
 	def test_class_002(self):
 		# FQCN の確認
-		m = re.search(self.class_re, S04_2)
+		m = re.search(JAVAP_REs['class'], S04_2)
 		self.assertIsNotNone(m, 'none class')
 		self.assertEqual(m.group('fqcn'), 'junit.extensions.ActiveTestSuite$1', 'FQCN error')
 		# ソースファイル名の確認
-		m = re.search(self.java_source_re, S04_2)
+		m = re.search(JAVAP_REs['java-source'], S04_2)
 		self.assertIsNotNone(m, 'none source file name')
 		self.assertEqual(m.group('source_file'), 'ActiveTestSuite', 'FQCN error')
 
 	def test_class_003(self):
 		# FQCN の確認
-		m = re.search(self.interface_re, S04_3)
+		m = re.search(JAVAP_REs['interface'], S04_3)
 		self.assertIsNotNone(m, 'none class')
 		self.assertEqual(m.group('fqcn'), 'junit.extensions.package-info', 'FQCN error')
 		# ソースファイル名の確認
-		m = re.search(self.java_source_re, S04_3)
+		m = re.search(JAVAP_REs['java-source'], S04_3)
 		self.assertIsNotNone(m, 'none source file name')
 		self.assertEqual(m.group('source_file'), 'package-info', 'FQCN error')
 

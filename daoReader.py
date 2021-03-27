@@ -7,9 +7,9 @@ import xml.etree.ElementTree as ET
 
 from crudJudgment import judgment
 
-class DaoReader():
-    _CR01 = re.compile(r'--.*$', flags=(re.MULTILINE))
+from Constants import SQL_REs
 
+class DaoReader():
     def __init__(self, resourceRoot = None):
         self.resourceRoot = resourceRoot
 
@@ -33,7 +33,7 @@ class DaoReader():
                 wk += v.text
             if v.tail:
                 wk += v.tail
-        r['query'] = re.sub(self._CR01, r'', wk)
+        r['query'] = re.sub(SQL_REs['comment1'], r'', wk)
         return r
 
     def readXmls(self, xmlRoot = None, tableRE = []):

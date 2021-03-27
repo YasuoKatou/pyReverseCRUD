@@ -7,6 +7,8 @@ import shutil
 import subprocess
 import sys
 
+from Constants import JAVAP_REs
+
 class JavaAnalize():
     def __init__(self):
         # 定義情報の読込み
@@ -31,17 +33,6 @@ class JavaAnalize():
             "component": {},     # = analize.spring.component in crudConfig.json
             "mapper": {},        # = analize.spring.mapper in crudConfig.json
             "other": {},         # else
-        }
-        self._java_re = {
-            'java-source-re': re.compile(r'Compiled\s+from\s+"(?P<source_file>\S+)\.java"', flags=(re.MULTILINE)),
-            'class-re': re.compile(r'^(public|private)?\s*(final\s+)?(abstract\s+)?class\s+(?P<fqcn>\S+)', flags=(re.MULTILINE)),
-            'interface-re': re.compile(r'^(public|private)?\s*interface\s+(?P<fqcn>\S+)', flags=(re.MULTILINE)),
-            'implements-re': re.compile(r'public\s+class\s+\S+\s+implements\s+(?P<impl>\S+)', flags=(re.MULTILINE)),
-            'method-re': re.compile(r'(?P<deco>.*?)(?<!\/\/ Method )(?P<fqcn>[a-zA-Z0-9_\$\.]+)\((?P<args>[^\(\)]*)\).*;$', flags=(re.MULTILINE)),
-            'InterfaceMethodref-re': re.compile(r'\s*(?P<ref_no>#\d+)\s*=\s*InterfaceMethodref\s*\S+\s*\/\/\s*(?P<fqcn_method>[^\.]+\.\w+)'),
-            'code-block-re': re.compile(r'\{.+\}', flags=(re.DOTALL)),
-            'method-block-re': re.compile(r'.+?\n(\n|\})', flags=(re.DOTALL)),
-            'ref-no': re.compile(r'\d+:\s*invokeinterface\s*(?P<ref_no>#\d+)', flags=(re.MULTILINE)),
         }
         # ワークフォルダを初期化する
         if self._debug['decompile']:
@@ -115,25 +106,25 @@ class JavaAnalize():
         fqcn = None
         isClass = False
         # クラスの判定(public class xxxx {)
-        m = re.search(self._java_re['class-re'], file)
+        m = re.search(JAVAP_REs['class'], file)
         if m:
             fqcn = m.group('fqcn')
             isClass = True
         else:
             # インターフェースの判定（public interface xxx {)
-            m = re.search(self._java_re['interface-re'], file)
+            m = re.search(JAVAP_REs['interface'], file)
             if m:
                 fqcn = m.group('fqcn')
 
         impl = None
         # implementsを判定
-        m = re.search(self._java_re['implements-re'], file)
+        m = re.search(JAVAP_REs['implements'], file)
         if m:
             impl = m.group('impl')
 
         # javaソースファイル
         source_file = None
-        m = re.search(self._java_re['java-source-re'], file)
+        m = re.search(JAVAP_REs['java-source'], file)
         if m:
             source_file = m.group('source_file')
 
@@ -148,15 +139,15 @@ class JavaAnalize():
                 v2['javap'] = '%s.%s' % (fqcn.replace('.', '/'), method_name)
 
     def findMethods(self, class_name, mapper_refs, file):
-        m = re.search(self._java_re['code-block-re'], file)
+        m = re.search(JAVAP_REs['code-block'], file)
         assert m, 'javaのコードブロックが見つかりません.'
         code = m.group(0)
         #print(code)
         ret = {'constructor':[], 'public-method': [], 'private-method': []}
-        for mb in list(re.finditer(self._java_re['method-block-re'], code)):
+        for mb in list(re.finditer(JAVAP_REs['method-block'], code)):
             method_code = mb.group(0)
             #コンストラクタ／メソッドの判定
-            for m in list(re.finditer(self._java_re['method-re'], method_code)):
+            for m in list(re.finditer(JAVAP_REs['method'], method_code)):
                 #print(str(m.string))
                 fqcn = m.group('fqcn')
                 if fqcn == class_name:
@@ -171,7 +162,7 @@ class JavaAnalize():
                     item = {'name': fqcn, 'args': m.group('args'), 'mapper': []}
                     ret[scope].append(item)
             #マッパー参照の確認
-            for m in list(re.finditer(self._java_re['ref-no'], method_code)):
+            for m in list(re.finditer(JAVAP_REs['ref-no'], method_code)):
                 ref_no = m.group('ref_no')
                 if ref_no in mapper_refs.keys():
                     mp = mapper_refs[ref_no]
@@ -187,7 +178,7 @@ class JavaAnalize():
         デコンパイルの結果からDao呼び出しの一覧を作成
         '''
         ret = {}
-        for m in list(re.finditer(self._java_re['InterfaceMethodref-re'], file)):
+        for m in list(re.finditer(JAVAP_REs['interface-method-ref'], file)):
             fqcn_method = m.group('fqcn_method')
             #print('%s - %s' % (m.group('ref_no'), fqcn_method))
             for v1 in map_info.values():

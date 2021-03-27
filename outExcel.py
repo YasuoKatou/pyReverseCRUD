@@ -5,7 +5,6 @@ import logging
 from os import truncate
 import openpyxl
 import pathlib
-import re
 
 from openpyxl.styles import Border, Side, PatternFill, Font, GradientFill, Alignment
 
