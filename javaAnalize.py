@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import json
 import logging
 import pathlib
@@ -7,7 +8,7 @@ import shutil
 import subprocess
 import sys
 
-from Constants import JAVAP_REs
+from Constants import JAVAP_REs, getWordRE
 
 class JavaAnalize():
     def __init__(self):
@@ -52,7 +53,7 @@ class JavaAnalize():
                 for t in tables.keys():
                     tn = t.lower()
                     if tn not in r.keys():
-                        r[tn] = re.compile(r'[^\w]%s[^\w\.]' % t, flags=(re.MULTILINE | re.IGNORECASE))
+                        r[tn] = getWordRE(t)
                     else:
                         logging.info('%s is duplicated' % tn)
         return r

@@ -7,7 +7,7 @@ DML_REs = {
 }
 
 DDL_REs = {
-	'create-view' : re.compile(r'CREATE\s+(OR\s+REPLACE\s+)?(TEMP\s+|TEMPORARY\s+)?(RECURSIVE\s+)?VIEW\s+(?P<view_name>\S+)', flags=(re.DOTALL | re.IGNORECASE)),
+	'create-view' : re.compile(r'CREATE\s+(OR\s+REPLACE\s+)?(TEMP\s+|TEMPORARY\s+)?(RECURSIVE\s+)?VIEW\s+(?P<view_name>\S+)(?P<view_def>.*?);', flags=(re.DOTALL | re.IGNORECASE)),
 }
 
 SQL_REs = {
@@ -37,5 +37,8 @@ JAVAP_REs = {
 	'java-source': re.compile(r'Compiled\s+from\s+"(?P<source_file>\S+)\.java"', flags=(re.MULTILINE)),
 	'ref-no': re.compile(r'\d+:\s*invokeinterface\s*(?P<ref_no>#\d+)', flags=(re.MULTILINE)),
 }
+
+def getWordRE(word):
+	return re.compile(r'[^\w]%s[^\w\.]' % word, flags=(re.MULTILINE | re.IGNORECASE))
 
 #[EOF]
