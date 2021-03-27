@@ -5,5 +5,5 @@
         "**/.settings": true,
         "**/.factorypath": true
     },
-    "python.pythonPath": "z:\\python\\python-3.8.6-embed-amd64\\python.exe"
+    "python.pythonPath": "Z:\\python\\python-3.8.8-embed-amd64\\python.exe"
 }

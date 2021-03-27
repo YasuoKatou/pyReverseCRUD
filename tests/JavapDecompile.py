@@ -114,7 +114,7 @@ interface junit.extensions.package-info
   flags: (0x0200) ACC_INTERFACE
 '''
 
-class TestCheck20210312(unittest.TestCase):
+class JavapDecompileTest(unittest.TestCase):
 	# コード部分を抽出する正規表現
 	code_block_re = re.compile(r'\{.+\}', flags=(re.DOTALL))
 	# １メソッドを抽出する正規表現

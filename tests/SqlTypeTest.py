@@ -5,7 +5,7 @@ import unittest
 
 verbose_list = []
 
-class TestStringMethods(unittest.TestCase):
+class SqlTypeTest(unittest.TestCase):
 
 	_RS01 = r".+(?<!delete)\s+from\s+(?P<table_name>\w+).?"
 	_RS02 = r".+\s+join\s+(?P<join_name>\w+).?"

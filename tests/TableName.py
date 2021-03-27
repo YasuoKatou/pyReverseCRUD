@@ -89,7 +89,7 @@ _CH01a = r'''\
   where id = #{id}
 '''
 
-class TestCheck20210316(unittest.TestCase):
+class TableNameTest(unittest.TestCase):
 
 	def test_H01(self):
 		rs = re.search(_QR01, _QH01)
