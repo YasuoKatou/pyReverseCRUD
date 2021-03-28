@@ -36,7 +36,7 @@ class DaoReader():
         r['query'] = re.sub(SQL_REs['comment1'], r'', wk)
         return r
 
-    def readXmls(self, xmlRoot = None, tableRE = []):
+    def readXmls(self, xmlRoot = None, tableRE = [], viewRE = []):
         if not xmlRoot:
             xmlRoot = pathlib.Path(self.resourceRoot)
         logging.info('Mapper xml root : %s' % str(xmlRoot))
@@ -62,7 +62,7 @@ class DaoReader():
                 tagName = child.tag.lower()
                 if tagName in ('select', 'insert', 'update', 'delete'):
                   r['dml'][child.attrib['id']] = self.expandDml(tagName, child, sqlIncludes)
-            judgment(r, tableRE)
+            judgment(r, tableRE, viewRE)
         return rr
 
     '''

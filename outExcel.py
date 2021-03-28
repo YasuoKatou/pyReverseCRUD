@@ -81,7 +81,7 @@ def _setCURD(sheet, row, start_column, alignment1, table_list, crud_info):
 		for table in crud_tables:
 			table = table.lower()
 			if table not in table_list:
-				print('[%s] is not in CRUD list' % table)
+				logging.debug('[%s] is not in CRUD list' % table)
 				continue
 			pos = start_column + table_list.index(table) * 4
 			if crud_type == 'create':
@@ -220,7 +220,7 @@ def outExcel_java(crud_config, sheet, r):
 
 	setColumnWidth(sheet)
 
-def outExcel(r):
+def outExcel(r, view_info):
 	crud_config = getCrudConfig()
 	#print(crud_config)
 	book = openpyxl.Workbook()
@@ -234,7 +234,25 @@ def outExcel(r):
 	book.save(getExcelBookPath(prefix='crud'))
 	book.close()
 
-def outMapperInfo(map_info):
+def view2table(map_info, view_info):
+	'''
+	ビューの参照をテーブル参照に追加する
+	'''
+	for v in map_info.values():
+		dml = v['dml']
+		for info in dml.values():
+			crudR = info['crud']['read']
+			addTables = []
+			for vn in crudR:
+				if vn in view_info:
+					for tn in view_info[vn]:
+						if tn not in addTables:
+							addTables.append(tn)
+			for tn in addTables:
+				if tn not in crudR:
+					crudR.append(tn)
+
+def outMapperInfo(map_info, view_info):
 	crud_config = getCrudConfig()
 	excel_config = crud_config['Excel']
 	start_row = excel_config['start_row']

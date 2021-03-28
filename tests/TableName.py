@@ -162,42 +162,35 @@ class TableNameTest(unittest.TestCase):
 		self.assertEqual(rs.group('view_name'), 'view02', 'view name error')
 
 	def test_V03(self):
-		from othersDefine import readViewFedine
+		from othersDefine import readViewDedine
 		p = pathlib.Path(__file__)
 		sqlPath = p.parent / 'resources' / 'sources'
 		td = {}
 		for tn in ['shoe_data', 'shoelace_data', 'shoe', 'shoelace', 'unit']:
 			td[tn] = getWordRE(tn)
 		# テスト対象のメソッドを呼び出す
-		r = readViewFedine(str(sqlPath), td)
+		r = readViewDedine(str(sqlPath), td)
 
 		view_names = list(r.keys())
 		self.assertEqual(len(view_names), 3, 'view define count not equals')
 		vn = view_names[0]
-		self.assertEqual(vn, 'shoe',       'view name1 not equals')
+		self.assertEqual(vn, 'v_shoe',       'view name1 not equals')
 		tbs = r[vn]
 		self.assertEqual(len(tbs), 2,      'table count not equals')
 		self.assertEqual(tbs[0], 'shoe_data', 'table1 name error')
 		self.assertEqual(tbs[1], 'unit',      'table2 name error')
 		vn = view_names[1]
-		self.assertEqual(vn, 'shoelace',   'view name2 not equals')
+		self.assertEqual(vn, 'v_shoelace',   'view name2 not equals')
 		tbs = r[vn]
 		self.assertEqual(len(tbs), 2,      'table count not equals')
 		self.assertEqual(tbs[0], 'shoelace_data', 'table1 name error')
 		self.assertEqual(tbs[1], 'unit',          'table2 name error')
 		vn = view_names[2]
-		self.assertEqual(vn, 'shoe_ready', 'view name3 not equals')
+		self.assertEqual(vn, 'v_shoe_ready', 'view name3 not equals')
 		tbs = r[vn]
 		self.assertEqual(len(tbs), 2,      'table count not equals')
 		self.assertEqual(tbs[0], 'shoe',     'table1 name error')
 		self.assertEqual(tbs[1], 'shoelace', 'table2 name error')
-		'''
-		m1 = re.finditer(DDL_REs['create-view'], _QVS03)
-		self.assertIsNotNone(m1)
-		m2 = list(m1)
-		# メソッドブロック数を確認
-		self.assertEqual(len(m2), 3, 'view define count not equals')
-		'''
 
 if __name__ == '__main__':
 	unittest.main()

@@ -42,7 +42,7 @@ def findReferencedTable(query, crud, tableRE):
 		if re.search(searchRE, query):
 			crud['read'].append(tn)
 
-def judgment(dao, tableRE):
+def judgment(dao, tableRE, viewRE):
 	for dml in dao['dml'].values():
 		crud = {'create': [], 'update': [], 'read': [], 'delete': []}
 		query = "".join(dml['query'])
@@ -63,6 +63,7 @@ def judgment(dao, tableRE):
 			if tn not in tableRE.keys():
 				logging.warning('%s is not defined' % tn)
 		findReferencedTable(query, crud, tableRE)
+		findReferencedTable(query, crud, viewRE)
 
 		dml['crud'] = crud
 		del dml['query']
@@ -77,7 +78,7 @@ def judgment(dao, tableRE):
 	出力は、DaoReader.readXmlsの「FQCN_(n).dml.DML_(n)」に下記内容を追加する
     "crud": {
       "create": [],
-      "read": [(table_name1)(, table_name2)],
+      "read": [(table_name1)(, table_name2)(, view_name1)],
       "update": [],
       "delete": []
     }

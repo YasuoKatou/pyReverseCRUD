@@ -5,7 +5,7 @@ import re
 
 from Constants import DDL_REs
 
-def readViewFedine(defPath, tableList):
+def readViewDedine(defPath, tableList):
 	assert tableList, 'no table names'
 	vl = {}
 	p = pathlib.Path(defPath)
@@ -17,7 +17,7 @@ def readViewFedine(defPath, tableList):
 				def_body = m.group('view_def')
 				for tn, t_re in tableList.items():
 					if re.search(t_re, def_body):
-						tables.append(tn)
-				vl[m.group('view_name')] = tables
+						tables.append(tn.lower())
+				vl[m.group('view_name').lower()] = tables
 	return vl
 #[EOF]

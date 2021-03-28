@@ -18,6 +18,7 @@ class JavaAnalize():
         with json_path.open(mode='r', encoding='UTF8') as f:
             config = json.load(f)
         self._tables = config['tables']
+        self._others = config['others']
         analize = config['analize']
         self._debug = analize['debug']
         self._jdkPath = analize['jdk-path']
@@ -27,6 +28,8 @@ class JavaAnalize():
         self._javaSrc = self._projectRoot + analize['Project']['java-src']
         self._projectClasses = self._projectRoot + analize['Project']['classes']
         self._mapperXMLPath = self._projectRoot + analize['Project']['mapper-xml']
+        self._viewDefPath = analize['Project']['view-def-path']
+
         self._spring = analize['spring']
         self._project = {
             "controller": {},    # = analize.spring.controller in crudConfig.json
@@ -48,14 +51,24 @@ class JavaAnalize():
 
     def getTablesRE(self):
         r = {}
-        for list in self._tables.values():
-            for tables in list:
+        for table_group in self._tables.values():
+            for tables in table_group:
                 for t in tables.keys():
                     tn = t.lower()
                     if tn not in r.keys():
-                        r[tn] = getWordRE(t)
+                        r[tn] = getWordRE(tn)
                     else:
-                        logging.info('%s is duplicated' % tn)
+                        logging.info('[%s] is duplicated' % tn)
+        return r
+
+    def getViewsRE(self):
+        r = {}
+        for vn in self._others['views']:
+            if vn not in r.keys():
+                r[vn.lower()] = getWordRE(vn.lower())
+            else:
+                logging.info('[%s] is duplicated' % vn)
+            
         return r
 
     def command(self, cmd):
@@ -246,8 +259,9 @@ class JavaAnalize():
         '''
 if __name__ == '__main__':
     from outExcel import outExcel
-    from outExcel import outMapperInfo
+    from outExcel import outMapperInfo, view2table
     from daoReader import DaoReader
+    from othersDefine import readViewDedine
 
     log_format = '%(levelname)s : %(asctime)s : %(message)s'
     #logging.basicConfig(level=logging.DEBUG, format=log_format)
@@ -256,10 +270,13 @@ if __name__ == '__main__':
     ana = JavaAnalize()
     dao = DaoReader(ana.getMapperXMLPath())
     tableRE = ana.getTablesRE()
-    map_info = dao.readXmls(tableRE=tableRE)
+    viewRE  = ana.getViewsRE()
+    map_info = dao.readXmls(tableRE=tableRE, viewRE=viewRE)
+    view_info = readViewDedine(ana._viewDefPath, tableRE)
+    view2table(map_info, view_info)
     if ana._debug['mapper-excel']:
-        outMapperInfo(map_info)
+        outMapperInfo(map_info, view_info)
     ana.analize(map_info)
-    outExcel(ana._project)
+    outExcel(ana._project, view_info)
     logging.info('解析終了')
 #[EOF]

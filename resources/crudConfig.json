@@ -29,7 +29,8 @@
             "path": "Z:\\workspace\\java\\sample002",
             "java-src": "\\src\\main\\java",
             "classes": "\\target\\classes",
-            "mapper-xml": "\\src\\main\\resources\\dao"
+            "mapper-xml": "\\src\\main\\resources\\dao",
+            "view-def-path": "Z:\\workspace\\GitHub\\pyReverseCRUD\\tests\\resources\\sources"
         },
         "spring": {
             "controller": {
@@ -85,14 +86,24 @@
     "tables": {
         "master": [
             {"user": "ユーザマスタ"},
-            {"syain": "社員マスタ"}
+            {"syain": "社員マスタ"},
+            {"shoe": "シューズマスタ"},
+            {"shoelace": "靴ひもマスタ"},
+            {"Unit": "単位変換マスタ"}
         ],
         "transaction": [
             {"products": "製品"},
             {"some_table": "トランザクションテーブル"},
             {"table": "テーブル1"},
             {"hoge": "テーブル2"},
-            {"fuga": "テーブル3"}
+            {"fuga": "テーブル3"},
+            {"Shoe_Data": "シューズデータ"},
+            {"shoelace_data": "靴ひもデータ"}
+        ]
+    },
+    "others": {
+        "views": [
+            "v_shoe", "V_SHOELACE", "v_Shoe_Ready"
         ]
     }
 }

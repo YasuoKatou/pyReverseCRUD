@@ -1,9 +1,10 @@
 # pyReverseCRUD （開発中）
-JavaソースとMyBatisのMapperXMLからCRUDを作成する
-
+Java のコンパイル結果と MyBatis の Mapper XML から CRUD を作成する  
+注意事項  
+* DML の構文解析は行っていません。CRUD の種別は Mapper XML の タグから判断します。  
+* 参照テーブルは、下記定義ファイルの```tables```で定義します。  
 ## リバースエンジニアリングツール
-* 解析結果は、Excelに出力する
-* 出力タイプは、次の３種類用意する
+* 解析結果は、Excelに次の４種類（シート）を出力する
     * メソッド単位（完成）
     * javaソース単位（着手）
     * サービス単位
@@ -26,6 +27,55 @@ JavaソースとMyBatisのMapperXMLからCRUDを作成する
 
 * include タグ  
   同Mapperファイル内の sql タグを展開する
+
+## 定義ファイル（resources/crudConfig.json）について  
+* ```analize```  
+    * ```debug```  
+        * ```decompile```  
+        逆アセンブル（javap）を実施する [True]／しない [False] を指定する。初回起動時は、[True] を指定する。  
+        * ```mapper-excel```  
+        マッパーの CRUD を Exce l出力する [True]／しない [False] を指定する。
+    * ```jdk-path```  
+        Java JDK（javap） のフォルダをフルパスで指定する。  
+    * ```javap-options```  
+        javap 起動時のオプションを指定する。（固定）  
+    * ```work-path```  
+        逆アセンブル（javap）の結果を格納するフォルダをフルパスで指定する。  
+    * ```Project```  
+        プロジェクトに関する情報を設定する。  
+        * ```path```  
+            プロジェクトのルートパスをフルパスで指定する。  
+        * ```java-src```（未使用）  
+            Javaソースファイルのパスを```path```からの相対パスで指定する。  
+        * ```classes```  
+            .classファイルのパスを```path```からの相対パスで指定する。  
+        * ```mapper-xml```  
+            mapper xmlファイルのパスを```path```からの相対パスで指定する。  
+        * ```view-def-path```  
+            ビュー定義ファイルのルートパスをフルパスで指定する。  
+    * ```spring```  
+        （工事中）  
+* ```Excel```  
+    * ```start_row```  
+        CRUD の出力を開始するシートの行番号。（固定）  
+    * ```header_rows```  
+        CRUD のヘッダー行数。（固定）  
+    * ```start_column```  
+        CRUD マトリクス出力開始列番号。（固定）
+    * ```crud_width```  
+        CRUD のセル幅。（固定）  
+    * ```tables```  
+        * テーブルグループ名称キー  
+            テーブルグループ名を指定する。 このキーは、```tables```にリンクする。 
+    * ```exclude-no_mapper_call```  
+        マッパー呼び出しを行わないメソッドまたはクラスをマトリクスから除外する [True]／しない [False] を指定する。  
+* ```tables```  
+    * テーブルグループ名称キー  
+        * テーブル名称（物理名）キー  
+            テーブル名称の和名を定義する。 
+* ```others```  
+    * ```views```  
+        ビューの一覧を指定する。  
 
 ## 開発メモ  
 * 【製造】デコンパイル結果からjavaのソースファイル単位でcrudを作成
