@@ -172,7 +172,7 @@ class TableNameTest(unittest.TestCase):
 		r = readViewDedine(str(sqlPath), td)
 
 		view_names = list(r.keys())
-		self.assertEqual(len(view_names), 3, 'view define count not equals')
+		self.assertEqual(len(view_names), 4, 'view define count not equals')
 		vn = view_names[0]
 		self.assertEqual(vn, 'v_shoe',       'view name1 not equals')
 		tbs = r[vn]
@@ -191,6 +191,13 @@ class TableNameTest(unittest.TestCase):
 		self.assertEqual(len(tbs), 2,      'table count not equals')
 		self.assertEqual(tbs[0], 'shoe',     'table1 name error')
 		self.assertEqual(tbs[1], 'shoelace', 'table2 name error')
+		vn = view_names[3]
+		self.assertEqual(vn, 'vv1', 'view name4 not equals')
+		tbs = r[vn]
+		self.assertEqual(len(tbs), 3,      'table count not equals')
+		self.assertTrue('shoe'          in tbs, 'table1 name error')
+		self.assertTrue('shoelace_data' in tbs, 'table1 name error')
+		self.assertTrue('unit'          in tbs, 'table1 name error')
 
 if __name__ == '__main__':
 	unittest.main()

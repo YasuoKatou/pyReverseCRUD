@@ -30,3 +30,10 @@ CREATE VIEW v_Shoe_Ready AS
      WHERE rsl.sl_color = rsh.slcolor
        AND rsl.sl_len_cm >= rsh.slminlen_cm
        AND rsl.sl_len_cm <= rsh.slmaxlen_cm;
+
+  create view VV1
+  as select *
+     from V_SHOELACE V1
+     inner join shoe rsh
+       on rsh.shoename = V1.sl_name
+     ;
